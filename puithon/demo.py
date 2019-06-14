@@ -1,4 +1,7 @@
+import base64
 import functools
+import sys
+from cefpython3 import cefpython as cef
 
 
 class DOM:
@@ -49,39 +52,193 @@ class DOM:
         pass
 
     def bind_event(self, event_name, handler):
+        print(f'event "{event_name}" bind with {handler}')
+
+    def set_display_none(self):
+        """
+        This is usually used to hide an element
+        :return:
+        """
+        pass
+
+    def set_display(self, mode='block'):
         pass
 
 
 class Window:
 
-    def __init__(self, height=600, width=400):
+    def __init__(self, height=600, width=400, window_title=None):
+        self.window_title = window_title
         self.height = height
         self.width = width
+        self._browser = None
 
-    def _event_bridge(self, dom, event_name):
-        def _wrapper_o(func):
-            @functools.wraps(func)
-            def _wrapper(sender, event):
-                pass
+    def _get_dom_by_selector(self, selector):
+        return DOM(selector)
 
-            return _wrapper
+    def _event_bridge(self, dom, event_name, new_thread=True):
+        def wrapper_o(func):
+            # @functools.wraps(func)
+            # def wrapper(sender, event):
+            #     pass
 
-        return _wrapper_o
+            _dom = dom
+            if type(dom) is str:
+                _dom = self._get_dom_by_selector(dom)
+            _dom.bind_event(event_name, func)
+
+            return func
+
+        return wrapper_o
+
+    @staticmethod
+    def html_to_data_uri(html):
+        """
+        Utility function
+
+        :param html:
+        :return:
+        """
+        html = html.encode("utf-8", "replace")
+        b64 = base64.b64encode(html).decode("utf-8", "replace")
+        return "data:text/html;base64,{data}".format(data=b64)
+
+    def get_html(self):
+        raise NotImplementedError()
+
+    def start(self):
+        """
+        Show the CEFPython window
+        This method will block
+
+        :return:
+        """
+        # To shutdown all CEF processes on error
+        sys.excepthook = cef.ExceptHook
+
+        cef.Initialize(
+            settings={
+                # "product_version": "MyProduct/10.00",
+                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
+                # 'context_menu': {'enabled': False},
+                'downloads_enabled': False
+            }, switches={
+                'allow_file_access': b'1',
+                'allow_file_access_from_files': b'1'
+            })
+
+        self._browser = cef.CreateBrowserSync(
+            url=self.html_to_data_uri(self.get_html()),
+            window_title=self.window_title,
+            settings={'file_access_from_file_urls_allowed': True, }
+        )
+
+        cef.MessageLoop()
+
+        # Clean up
+        cef.QuitMessageLoop()
+        cef.Shutdown()
 
 
 class HelloWindow(Window):
 
+    def get_html(self):
+        return """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>HelloWindow</title>
+            </head>
+            <body>
+            
+            <label for="name">Name:</label><input type="text" id="name">
+            <button id="ok-button">OK</button>
+            
+            </body>
+            </html>
+        """
+
     def register_handlers(self):
         # Set shortcut
         event_bridge = self._event_bridge
+
+        # The widget to get the 'name' from user input
         textinput = DOM('#name')
 
-        @event_bridge('#ok_button', 'click')
+        @event_bridge('#ok-button', 'click')
         def on_ok_clicked(sender: DOM, event):
             name = textinput.get_attr('value')
             print('the name is', name)
             sender.set_innerText('Sure!')
 
+        @event_bridge(textinput, 'change')
+        def on_input_text_change(sender: DOM, event):
+            print('onChange: name =', sender.get_attr('value'))
+
+
+class AsyncResponseWindow(Window):
+
+    def __init__(self, height=600, width=400, window_title=None):
+        window_title = self.__class__.__name__ if window_title is None else window_title
+        super().__init__(height=height, width=width, window_title=window_title)
+
+        self.widget_spinner: DOM
+        # The span to show the result
+        self.widget_result_text: DOM
+
+    def get_html(self):
+        return """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>AsyncResponseWindow</title>
+            </head>
+            <body>
+            
+            <label for="inputBox">Input:</label><input type="text" id="inputBox">
+            <button id="ok-button">Get Time Consuming Result</button>
+            <p>
+                Result:
+                <span id='result'></span>
+            </p>
+            
+            </body>
+            </html>
+        """
+
+    def spinning(self, func):
+        def wrapper(*args, **kwargs):
+            self.widget_spinner.set_display()  # Show the spinner
+            func(*args, **kwargs)
+            self.widget_spinner.set_display_none()  # Hide the spinner
+        return wrapper
+
+    def register_handlers(self):
+
+        # Set shortcut
+        event_bridge = self._event_bridge
+
+        self.widget_spinner = DOM('div#spinner')
+        # The span to show the result
+        self.widget_result_text = DOM('span#result')
+
+        @self.spinning
+        @event_bridge('#ok-button', 'click')
+        def get_result_slow(sender, evt):
+            import time
+            time.sleep(2)
+
+            result = {'a': 1, 'b': 2}
+            self.widget_result_text.set_innerText(str(result))
+
 
 if __name__ == '__main__':
-    helloWindow = HelloWindow()
+    # helloWindow = HelloWindow()
+    # helloWindow.register_handlers()
+    # helloWindow.start()
+
+    asyncWindow = AsyncResponseWindow()
+    asyncWindow.register_handlers()
+    asyncWindow.start()
