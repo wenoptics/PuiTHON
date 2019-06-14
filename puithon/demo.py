@@ -183,9 +183,9 @@ class AsyncResponseWindow(Window):
         window_title = self.__class__.__name__ if window_title is None else window_title
         super().__init__(height=height, width=width, window_title=window_title)
 
-        self.widget_spinner: DOM
+        self.widget_spinner: DOM = DOM('')
         # The span to show the result
-        self.widget_result_text: DOM
+        self.widget_result_text: DOM = DOM('')
 
     def get_html(self):
         return """
@@ -220,6 +220,7 @@ class AsyncResponseWindow(Window):
         # Set shortcut
         event_bridge = self._event_bridge
 
+        # The spinner animation
         self.widget_spinner = DOM('div#spinner')
         # The span to show the result
         self.widget_result_text = DOM('span#result')
