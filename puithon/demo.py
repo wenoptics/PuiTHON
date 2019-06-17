@@ -77,6 +77,23 @@ class Window:
         return DOM(selector)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
+        """
+        A wrapper function
+
+        Typically used as a decorator for a the event callbacks
+
+        e.g.
+
+        >>>
+        @event_bridge('#some-id', 'click')
+        def some_func(sender, evt):
+            pass
+
+        :param dom:
+        :param event_name:
+        :param new_thread:
+        :return:
+        """
         def wrapper_o(func):
             # @functools.wraps(func)
             # def wrapper(sender, event):
@@ -138,6 +155,9 @@ class Window:
         # Clean up
         cef.QuitMessageLoop()
         cef.Shutdown()
+
+    def stop(self):
+        pass
 
 
 class HelloWindow(Window):
