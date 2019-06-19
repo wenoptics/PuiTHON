@@ -16,6 +16,69 @@ class DOM:
         self._dom_attr = {}
 
     def set_attr(self, name, value):
+        raise NotImplementedError()
+
+    def get_attr(self, name):
+        raise NotImplementedError()
+
+    def set_class(self, class_or_list):
+        raise NotImplementedError()
+
+    def add_class(self, class_):
+        raise NotImplementedError()
+
+    def remove_class(self, class_):
+        raise NotImplementedError()
+
+    def set_innerhtml(self, s):
+        raise NotImplementedError()
+
+    def set_innertext(self, s):
+        raise NotImplementedError()
+
+    def get_innerhtml(self, s):
+        raise NotImplementedError()
+
+    def get_innertext(self, s):
+        raise NotImplementedError()
+
+    def execute_js(self, code):
+        """
+        Run raw javascript
+
+        :param code:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def bind_event(self, event_name, handler):
+        print(f'event "{event_name}" bind with {handler}')
+        raise NotImplementedError()
+
+    def set_display_none(self):
+        """
+        This is usually used to hide an element
+        :return:
+        """
+        raise NotImplementedError()
+
+    def set_display(self, mode='block'):
+        raise NotImplementedError()
+
+
+class HotDOM(DOM):
+
+    def __init__(self, selector, browser: Browser):
+        super().__init__(selector)
+        self.browser = browser
+        self.selector = selector
+        self._dom_attr = {}
+
+    @property
+    def jquery_sel(self):
+        return f"$('{self.selector}')"
+
+    def set_attr(self, name, value):
         pass
 
     def get_attr(self, name):
@@ -30,26 +93,33 @@ class DOM:
     def remove_class(self, class_):
         pass
 
-    def set_innerHTML(self, s):
+    def set_innerhtml(self, s):
         pass
 
-    def set_innerText(self, s):
+    def set_innertext(self, s):
         pass
 
-    def get_innerHTML(self, s):
+    def get_innerhtml(self, s):
         pass
 
-    def get_innerText(self, s):
-        pass
+    def get_innertext(self, s):
+        return self.execute_js(".text();", True)
 
-    def execute_js(self, code):
+    def execute_js(self, code, prepend_jquery=False):
         """
         Run raw javascript
 
+        :param prepend_jquery:
         :param code:
         :return:
         """
-        pass
+        if prepend_jquery:
+            code = f"{self.jquery_sel}.{code}"
+
+        return self.browser.ExecuteJavascript(code)
+
+    def execute_js_with_return(self, code):
+        self.execute_js();
 
     def bind_event(self, event_name, handler):
         print(f'event "{event_name}" bind with {handler}')
@@ -59,10 +129,58 @@ class DOM:
         This is usually used to hide an element
         :return:
         """
-        pass
+        self.execute_js(".css('display', 'none');", True)
 
     def set_display(self, mode='block'):
-        pass
+        self.execute_js(f".css('display', '{mode}');", True)
+
+
+class WindowManager:
+    def __init__(self):
+        self.list_windows = []
+
+        self._cef_init()
+
+    def _cef_init(self):
+        # To shutdown all CEF processes on error
+        sys.excepthook = cef.ExceptHook
+
+        cef.Initialize(
+            settings={
+                # "product_version": "MyProduct/10.00",
+                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
+                # 'context_menu': {'enabled': False},
+                'downloads_enabled': False
+            }, switches={
+                'allow_file_access': b'1',
+                'allow_file_access_from_files': b'1'
+            })
+
+    def new_window(self, window: Window):
+        assert window not in self.list_windows
+        self.list_windows.append(window)
+
+    def show_window(self, window: Window):
+        assert window in self.list_windows, 'use new_window() to initialize a new window'
+
+        window._browser = cef.CreateBrowserSync(
+            url=self.html_to_data_uri(self.get_html()),
+            window_title=self.window_title,
+            settings={'file_access_from_file_urls_allowed': True, }
+        )
+
+    def serve(self):
+        """
+        Show the CEFPython window
+        This method will block
+
+        :return:
+        """
+        cef.MessageLoop()
+
+        # Clean up
+        cef.QuitMessageLoop()
+        cef.Shutdown()
 
 
 class Window:
@@ -74,7 +192,7 @@ class Window:
         self._browser = None
 
     def _get_dom_by_selector(self, selector):
-        return DOM(selector)
+        return HotDOM(selector, self._browser)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
         """
@@ -84,16 +202,16 @@ class Window:
 
         e.g.
 
-        >>>
-        @event_bridge('#some-id', 'click')
-        def some_func(sender, evt):
-            pass
+        >>> @event_bridge('#some-id', 'click')
+        >>> def some_func(sender, evt):
+        >>>     pass
 
         :param dom:
         :param event_name:
         :param new_thread:
         :return:
         """
+
         def wrapper_o(func):
             # @functools.wraps(func)
             # def wrapper(sender, event):
@@ -123,40 +241,11 @@ class Window:
     def get_html(self):
         raise NotImplementedError()
 
-    def start(self):
+    def close(self):
         """
-        Show the CEFPython window
-        This method will block
-
+        Close the window
         :return:
         """
-        # To shutdown all CEF processes on error
-        sys.excepthook = cef.ExceptHook
-
-        cef.Initialize(
-            settings={
-                # "product_version": "MyProduct/10.00",
-                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
-                # 'context_menu': {'enabled': False},
-                'downloads_enabled': False
-            }, switches={
-                'allow_file_access': b'1',
-                'allow_file_access_from_files': b'1'
-            })
-
-        self._browser = cef.CreateBrowserSync(
-            url=self.html_to_data_uri(self.get_html()),
-            window_title=self.window_title,
-            settings={'file_access_from_file_urls_allowed': True, }
-        )
-
-        cef.MessageLoop()
-
-        # Clean up
-        cef.QuitMessageLoop()
-        cef.Shutdown()
-
-    def stop(self):
         pass
 
 
@@ -233,10 +322,10 @@ class AsyncResponseWindow(Window):
             self.widget_spinner.set_display()  # Show the spinner
             func(*args, **kwargs)
             self.widget_spinner.set_display_none()  # Hide the spinner
+
         return wrapper
 
     def register_handlers(self):
-
         # Set shortcut
         event_bridge = self._event_bridge
 
@@ -260,6 +349,12 @@ if __name__ == '__main__':
     # helloWindow.register_handlers()
     # helloWindow.start()
 
+    mgr = WindowManager()
+
     asyncWindow = AsyncResponseWindow()
     asyncWindow.register_handlers()
-    asyncWindow.start()
+
+    mgr.new_window(asyncWindow)
+    mgr.show_window(asyncWindow)
+
+    mgr.serve()
