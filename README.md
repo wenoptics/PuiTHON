@@ -14,3 +14,8 @@ python language feature.
  - [ ] |---- frontend data binding
  - [ ] |---- messaging across windows
  
+## Benefits
+
+ - Decoupled `views`, easy migrate from _Platform Application_ -> _Web Application_ or vice versa.
+ 
+ 
