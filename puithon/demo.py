@@ -68,7 +68,7 @@ class DOM:
 
 class HotDOM(DOM):
 
-    def __init__(self, selector, browser: Browser):
+    def __init__(self, selector, browser):
         super().__init__(selector)
         self.browser = browser
         self.selector = selector
@@ -119,6 +119,11 @@ class HotDOM(DOM):
         return self.browser.ExecuteJavascript(code)
 
     def execute_js_with_return(self, code):
+        """
+        Get intermediate return from
+        :param code:
+        :return:
+        """
         self.execute_js();
 
     def bind_event(self, event_name, handler):
@@ -133,54 +138,6 @@ class HotDOM(DOM):
 
     def set_display(self, mode='block'):
         self.execute_js(f".css('display', '{mode}');", True)
-
-
-class WindowManager:
-    def __init__(self):
-        self.list_windows = []
-
-        self._cef_init()
-
-    def _cef_init(self):
-        # To shutdown all CEF processes on error
-        sys.excepthook = cef.ExceptHook
-
-        cef.Initialize(
-            settings={
-                # "product_version": "MyProduct/10.00",
-                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
-                # 'context_menu': {'enabled': False},
-                'downloads_enabled': False
-            }, switches={
-                'allow_file_access': b'1',
-                'allow_file_access_from_files': b'1'
-            })
-
-    def new_window(self, window: Window):
-        assert window not in self.list_windows
-        self.list_windows.append(window)
-
-    def show_window(self, window: Window):
-        assert window in self.list_windows, 'use new_window() to initialize a new window'
-
-        window._browser = cef.CreateBrowserSync(
-            url=self.html_to_data_uri(self.get_html()),
-            window_title=self.window_title,
-            settings={'file_access_from_file_urls_allowed': True, }
-        )
-
-    def serve(self):
-        """
-        Show the CEFPython window
-        This method will block
-
-        :return:
-        """
-        cef.MessageLoop()
-
-        # Clean up
-        cef.QuitMessageLoop()
-        cef.Shutdown()
 
 
 class Window:
@@ -226,6 +183,63 @@ class Window:
 
         return wrapper_o
 
+    def get_html(self):
+        raise NotImplementedError()
+
+    def close(self):
+        """
+        Close the window
+        :return:
+        """
+        pass
+
+
+class WindowManager:
+    def __init__(self):
+        self.list_windows = []
+        self._cef_init()
+
+    def _cef_init(self):
+        # To shutdown all CEF processes on error
+        sys.excepthook = cef.ExceptHook
+
+        cef.Initialize(
+            settings={
+                # "product_version": "MyProduct/10.00",
+                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
+                # 'context_menu': {'enabled': False},
+                'downloads_enabled': False
+            }, switches={
+                'allow_file_access': b'1',
+                'allow_file_access_from_files': b'1'
+            })
+
+    def new_window(self, window: Window):
+        assert window not in self.list_windows
+        self.list_windows.append(window)
+
+    def show_window(self, window: Window):
+        assert window in self.list_windows, 'use new_window() to initialize a new window'
+
+        window._browser = cef.CreateBrowserSync(
+            url=self.html_to_data_uri(window.get_html()),
+            window_title=window.window_title,
+            settings={'file_access_from_file_urls_allowed': True, }
+        )
+
+    def serve(self):
+        """
+        Show the CEFPython window
+        This method will block
+
+        :return:
+        """
+        cef.MessageLoop()
+
+        # Clean up
+        cef.QuitMessageLoop()
+        cef.Shutdown()
+
     @staticmethod
     def html_to_data_uri(html):
         """
@@ -237,16 +251,6 @@ class Window:
         html = html.encode("utf-8", "replace")
         b64 = base64.b64encode(html).decode("utf-8", "replace")
         return "data:text/html;base64,{data}".format(data=b64)
-
-    def get_html(self):
-        raise NotImplementedError()
-
-    def close(self):
-        """
-        Close the window
-        :return:
-        """
-        pass
 
 
 class HelloWindow(Window):
@@ -261,7 +265,8 @@ class HelloWindow(Window):
             </head>
             <body>
             
-            <label for="name">Name:</label><input type="text" id="name">
+            <label for="name">Name:</label>
+            <input type="text" id="name" value='twin'>
             <button id="ok-button">OK</button>
             
             </body>
@@ -279,7 +284,7 @@ class HelloWindow(Window):
         def on_ok_clicked(sender: DOM, event):
             name = textinput.get_attr('value')
             print('the name is', name)
-            sender.set_innerText('Sure!')
+            sender.get_innertext('Sure!')
 
         @event_bridge(textinput, 'change')
         def on_input_text_change(sender: DOM, event):
@@ -341,7 +346,7 @@ class AsyncResponseWindow(Window):
             time.sleep(2)
 
             result = {'a': 1, 'b': 2}
-            self.widget_result_text.set_innerText(str(result))
+            self.widget_result_text.set_innertext(str(result))
 
 
 if __name__ == '__main__':

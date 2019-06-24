@@ -7,3 +7,10 @@ python language feature.
 
  - CEFPython
  
+## Features
+
+ - [ ] Window Manager
+ - [ ] |-- Messaging 
+ - [ ] |---- frontend data binding
+ - [ ] |---- messaging across windows
+ 
