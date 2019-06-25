@@ -4,7 +4,7 @@ import functools
 
 from cefpython3 import cefpython as cef
 
-from puithon.DOM import HotDOM
+from puithon.HotDOM import HotDOM
 
 
 class Window:
