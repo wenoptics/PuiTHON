@@ -34,7 +34,8 @@ class AsyncResponseWindow(Window):
         event_bridge = self._event_bridge
 
         # The spinner animation
-        self.widget_spinner = self._get_dom_by_selector('div#spinner')
+        self.widget_spinner = self._get_dom_by_selector('#demo-spinner')
+        self.widget_spinner.set_display_none()
         # The span to show the result
         self.widget_result_text = self._get_dom_by_selector('span#result')
 
@@ -47,6 +48,7 @@ class AsyncResponseWindow(Window):
 
             result = 'ok!'
             self.widget_result_text.set_innertext(str(result))
+            self._get_dom_by_selector('p').set_class('success')
 
     def on_dom_ready(self):
         self.register_handlers()

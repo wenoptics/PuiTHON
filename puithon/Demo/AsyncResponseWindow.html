@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>AsyncResponseWindow</title>
+    <style>
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
 <label for="inputBox">Input:</label><input type="text" id="inputBox">
 <button id="ok-button">Get Time Consuming Result</button>
+<p id="demo-spinner">Please wait...</p>
 <p>
     Result:
     <span id='result'></span>
