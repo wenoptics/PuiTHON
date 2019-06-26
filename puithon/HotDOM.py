@@ -1,7 +1,7 @@
 import logging
 
 from puithon.DOM import DOM
-from puithon.runtime import get_python_callback_js_name, global_js_bindings, bind_setting
+from puithon.runtime import get_python_callback_js_name, bind_setting
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class HotDOM(DOM):
         pass
 
     def set_innertext(self, s):
-        pass
+        self.call_engine_function('setText', self.selector, s)
 
     def get_innerhtml(self, s):
         pass
@@ -71,14 +71,17 @@ class HotDOM(DOM):
         raise NotImplementedError()  # todo
         self.execute_js();
 
+    def call_engine_function(self, func_name: str, *args, **kwargs):
+        _ENGINE_VAR = 'puithonJS'
+        if not func_name.startswith(_ENGINE_VAR + '.'):
+            func_name = f'{_ENGINE_VAR}.{func_name}'
+        self.browser.ExecuteFunction(func_name, *args, **kwargs)
+
     def bind_event(self, event_name, handler):
         js_name = get_python_callback_js_name(handler)
-        print(f'event "{event_name}" bind with {handler} ("{js_name}")')
-        bind_setting.add_js_binding(self.browser, js_name, handler)
-        self.execute_js(f".on('{event_name}', (evt)=>{{"
-                        f"  console.log(evt);"
-                        # f"  {js_name}()"
-                        f"}})", True)
+        print(f'event "{event_name}" bind with "{js_name}": {handler}')
+        bind_setting.add_jsfunction_binding(self.browser, js_name, handler)
+        self.call_engine_function('addBindEvent', self.selector, event_name, js_name)
 
     def set_display_none(self):
         """

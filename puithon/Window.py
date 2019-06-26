@@ -7,6 +7,18 @@ from cefpython3 import cefpython as cef
 from puithon.HotDOM import HotDOM
 
 
+class _LoadHandler:
+    def __init__(self, on_dom_ready):
+        self._on_dom_ready = on_dom_ready
+
+    def OnLoadingStateChange(self, browser, is_loading, **_):
+        """Called when the loading state has changed."""
+        if not is_loading:
+            # Loading is complete. DOM is ready.
+            if self._on_dom_ready is not None:
+                self._on_dom_ready()
+
+
 class Window:
 
     def __init__(self, height=600, width=400, window_title=None):
@@ -15,7 +27,7 @@ class Window:
         self.width = width
         self._browser = None
 
-    def _get_dom_by_selector(self, selector):
+    def _get_dom_by_selector(self, selector) -> HotDOM:
         return HotDOM(selector, self._browser)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
@@ -50,12 +62,20 @@ class Window:
 
         return wrapper_o
 
-    def get_html(self):
+    def page_uri(self):
         raise NotImplementedError()
 
     def close(self):
         """
         Close the window
+        :return:
+        """
+        pass
+
+    def on_dom_ready(self):
+        """
+        Override this to be called on DOM ready
+
         :return:
         """
         pass
@@ -89,10 +109,12 @@ class WindowManager:
         assert window in self.list_windows, 'use new_window() to initialize a new window'
 
         window._browser = cef.CreateBrowserSync(
-            url=self.html_to_data_uri(window.get_html()),
+            url=window.page_uri(),
             window_title=window.window_title,
             settings={'file_access_from_file_urls_allowed': True, }
         )
+
+        window._browser.SetClientHandler(_LoadHandler(window.on_dom_ready))
 
     def serve(self):
         """
