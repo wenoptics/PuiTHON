@@ -46,6 +46,11 @@ class BindFunctionThread(StoppableThread):
 
 
 class JavascriptReturnThread(StoppableThread):
+    """
+    On Javascript side (the js-engine), values will be pushed here
+    (CEFPython does not allow instant javascript returns)
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -86,7 +91,9 @@ class JavascriptReturnThread(StoppableThread):
         :return:
         """
         from threading import Thread
-        Thread(target=lambda: handler(self.wait_for_value(what))).start()
+        Thread(target=lambda: handler(self.wait_for_value(what)),
+               name=f'{self.__class__.__name__}->on_value')\
+            .start()
 
     def subscribe(self, browser):
         """
