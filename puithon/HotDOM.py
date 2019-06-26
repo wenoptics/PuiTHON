@@ -54,8 +54,12 @@ class HotDOM(DOM):
         :return:
         """
         if prepend_jquery:
-            code = f"{self.jquery_sel}.{code}"
+            if not code.startswith('.'):
+                code = f"{self.jquery_sel}.{code}"
+            else:
+                code = f"{self.jquery_sel}{code}"
 
+        print('execute_js', code)
         self.browser.ExecuteJavascript(code)
 
     def execute_js_with_return(self, code):
@@ -71,8 +75,9 @@ class HotDOM(DOM):
         js_name = get_python_callback_js_name(handler)
         print(f'event "{event_name}" bind with {handler} ("{js_name}")')
         bind_setting.add_js_binding(self.browser, js_name, handler)
-        self.execute_js(f".on('{event_name}', ()=>{{"
-                        f"  {js_name}()"
+        self.execute_js(f".on('{event_name}', (evt)=>{{"
+                        f"  console.log(evt);"
+                        # f"  {js_name}()"
                         f"}})", True)
 
     def set_display_none(self):

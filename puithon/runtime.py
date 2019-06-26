@@ -28,6 +28,7 @@ class BindingSettingThread(Thread):
         self._evt_stop = Event()
 
     def run(self):
+        self._evt_stop.clear()
         while not self._evt_stop.is_set():
             browser, jsname, pyhandler, = self.q.get()
             global_js_bindings[browser].SetFunction(jsname, pyhandler)

@@ -1,4 +1,5 @@
 from puithon.DOM import DOM
+from puithon.HotDOM import HotDOM
 from puithon.Window import Window, WindowManager
 
 
@@ -67,6 +68,12 @@ class AsyncResponseWindow(Window):
                 <span id='result'></span>
             </p>
             
+            <script
+              src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+              integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+              crossorigin="anonymous">
+            </script>
+            
             </body>
             </html>
         """
@@ -84,9 +91,9 @@ class AsyncResponseWindow(Window):
         event_bridge = self._event_bridge
 
         # The spinner animation
-        self.widget_spinner = DOM('div#spinner')
+        self.widget_spinner = self._get_dom_by_selector('div#spinner')
         # The span to show the result
-        self.widget_result_text = DOM('span#result')
+        self.widget_result_text = self._get_dom_by_selector('span#result')
 
         @self.spinning
         @event_bridge('#ok-button', 'click')
@@ -106,9 +113,10 @@ if __name__ == '__main__':
     mgr = WindowManager()
 
     asyncWindow = AsyncResponseWindow()
-    asyncWindow.register_handlers()
 
     mgr.new_window(asyncWindow)
     mgr.show_window(asyncWindow)
+
+    asyncWindow.register_handlers()
 
     mgr.serve()
