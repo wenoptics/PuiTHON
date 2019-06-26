@@ -1,11 +1,13 @@
 import base64
 import sys
 import functools
+from pathlib import Path
 from threading import Thread
 
 from cefpython3 import cefpython as cef
 
 from puithon.HotDOM import HotDOM
+from puithon.runtime import jsreturned
 
 
 class HandlerThread:
@@ -72,7 +74,10 @@ class Window:
 
         def wrapper_o(func):
             if new_thread:
-                # wrap with thread
+                # Wrap with thread
+                # @functools.wraps(func)
+                # def thread_wrapped(*args, **kwargs):
+                #     HandlerThread(func).handler_with_args(*args, **kwargs)
                 func = HandlerThread(func).handler_with_args
 
             _dom = dom
@@ -85,7 +90,8 @@ class Window:
         return wrapper_o
 
     def page_uri(self):
-        raise NotImplementedError()
+        html_file = Path(__file__).with_suffix('.html')
+        return f'file://{str(html_file)}'
 
     def close(self):
         """
@@ -93,6 +99,10 @@ class Window:
         :return:
         """
         pass
+
+    def _on_dom_ready(self):
+        jsreturned.subscribe(self._browser)
+        self.on_dom_ready()
 
     def on_dom_ready(self):
         """
@@ -136,7 +146,7 @@ class WindowManager:
             settings={'file_access_from_file_urls_allowed': True, }
         )
 
-        window._browser.SetClientHandler(_LoadHandler(window.on_dom_ready))
+        window._browser.SetClientHandler(_LoadHandler(window._on_dom_ready))
 
     def serve(self):
         """

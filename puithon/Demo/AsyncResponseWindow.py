@@ -12,9 +12,10 @@ class AsyncResponseWindow(Window):
         window_title = self.__class__.__name__ if window_title is None else window_title
         super().__init__(height=height, width=width, window_title=window_title)
 
-        self.widget_spinner: DOM = DOM('')
+        self.widget_spinner = DOM('')
         # The span to show the result
-        self.widget_result_text: DOM = DOM('')
+        self.widget_result_text = DOM('')
+        self.widget_input = DOM('')
 
     def page_uri(self):
         html_file = Path(__file__).with_suffix('.html')
@@ -38,6 +39,7 @@ class AsyncResponseWindow(Window):
         self.widget_spinner.set_display_none()
         # The span to show the result
         self.widget_result_text = self._get_dom_by_selector('span#result')
+        self.widget_input = self._get_dom_by_selector('#inputBox')
 
         @event_bridge('#ok-button', 'click')
         @self.spinning
@@ -46,9 +48,20 @@ class AsyncResponseWindow(Window):
             import time
             time.sleep(2)
 
-            result = 'ok!'
-            self.widget_result_text.set_innertext(str(result))
+            val = self.widget_input.get_value()
+            print('inputbox =', val)
+
+            result = f'ok! {time.time()}. input={val}'
+            self.widget_result_text.set_innertext(result)
             self._get_dom_by_selector('p').set_class('success')
+
+        @event_bridge('#ok-button-now', 'click')
+        def get_result(*args, **kwargs):
+            print('get_result() get called')
+            val = self.widget_input.get_value()
+            result = f'get_result() get called. input={val}'
+            self.widget_result_text.set_innertext(result)
+            self._get_dom_by_selector('p').remove_class('success')
 
     def on_dom_ready(self):
         self.register_handlers()

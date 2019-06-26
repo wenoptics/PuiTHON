@@ -63,4 +63,7 @@ class DOM:
     def set_display(self, mode='block'):
         raise NotImplementedError()
 
+    def get_value(self):
+        raise NotImplementedError()
+
 

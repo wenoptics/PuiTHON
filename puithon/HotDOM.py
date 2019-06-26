@@ -1,7 +1,7 @@
 import logging
 
 from puithon.DOM import DOM
-from puithon.runtime import get_python_callback_js_name, bind_setting
+from puithon.runtime import get_python_callback_js_name, bind_setting, jsreturned
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class HotDOM(DOM):
         self.call_engine_function('setHtml', self.selector, s)
 
     def set_innertext(self, s):
-        self.call_engine_function('setText', self.selector, s)
+        self.call_engine_function('setText', self.selector, str(s))
 
     def get_innerhtml(self, s):
         pass
@@ -62,20 +62,27 @@ class HotDOM(DOM):
         logger.debug('execute_js', code)
         self.browser.ExecuteJavascript(code)
 
-    def execute_js_with_return(self, code):
-        """
-        Get intermediate return from
-        :param code:
-        :return:
-        """
-        raise NotImplementedError()  # todo
-        self.execute_js();
-
     def call_engine_function(self, func_name: str, *args, **kwargs):
         _ENGINE_VAR = 'puithonJS'
         if not func_name.startswith(_ENGINE_VAR + '.'):
             func_name = f'{_ENGINE_VAR}.{func_name}'
         self.browser.ExecuteFunction(func_name, *args, **kwargs)
+
+    def call_engine_with_poll(self, func_name: str, *args, **kwargs):
+        """
+        For those function calls that need poll values on the Javascript side
+        Typically, they are get*() functions
+
+        :param func_name:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        self.call_engine_function(func_name, self._get_js_returned_key(),
+                                  *args, **kwargs)
+
+    def _get_js_returned_key(self):
+        return f'_brz{id(self.browser)}_{self.selector}'
 
     def bind_event(self, event_name, handler):
         js_name = get_python_callback_js_name(handler)
@@ -94,3 +101,7 @@ class HotDOM(DOM):
 
     def set_display(self, mode='block'):
         self.call_engine_function('setDisplay', self.selector, mode)
+
+    def get_value(self):
+        self.call_engine_with_poll('getValue', self.selector)
+        return jsreturned.wait_for_value(self._get_js_returned_key())
