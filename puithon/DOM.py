@@ -51,7 +51,6 @@ class DOM:
         raise NotImplementedError()
 
     def bind_event(self, event_name, handler):
-        print(f'event "{event_name}" bind with {handler}')
         raise NotImplementedError()
 
     def set_display_none(self):

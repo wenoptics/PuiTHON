@@ -20,7 +20,30 @@ var puithonJS = {
     },
 
     setText: function (dom, text) {
-        console.log(text);
         $(dom).text(text);
+    },
+
+    setDisplay: function (dom, display) {
+        $(dom).css('display', display);
+    },
+
+    setHtml: function (dom, htmltext) {
+        $(dom).html(htmltext);
+    },
+
+    setClass: function (dom, class_) {
+        $(dom).removeClass();
+        $(dom).addClass(class_);
+    },
+    addClass: function (dom, class_) {
+        $(dom).addClass(class_);
+    },
+    removeClass: function (dom, class_) {
+        $(dom).removeClass(class_);
+    },
+
+    setProp: function (dom, name, val) {
+        $(dom).prop(name, val)
     }
+
 };

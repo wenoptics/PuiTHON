@@ -1,10 +1,32 @@
 import base64
 import sys
 import functools
+from threading import Thread
 
 from cefpython3 import cefpython as cef
 
 from puithon.HotDOM import HotDOM
+
+
+class HandlerThread:
+    def __init__(self, handler):
+        self.func_handler = handler
+
+    def _handler_with_args(self, *args, **kwargs):
+        Thread(name=f'{self.__class__.__name__}-{self.func_handler.__name__}',
+               target=self.func_handler, args=args, kwargs=kwargs).start()
+
+    def _handler_no_args(self):
+        Thread(name=f'{self.__class__.__name__}-{self.func_handler.__name__}',
+               target=self.func_handler).start()
+
+    @property
+    def handler_with_args(self):
+        return self._handler_with_args
+
+    @property
+    def handler_no_args(self):
+        return self._handler_no_args
 
 
 class _LoadHandler:
@@ -49,9 +71,9 @@ class Window:
         """
 
         def wrapper_o(func):
-            # @functools.wraps(func)
-            # def wrapper(sender, event):
-            #     pass
+            if new_thread:
+                # wrap with thread
+                func = HandlerThread(func).handler_with_args
 
             _dom = dom
             if type(dom) is str:
@@ -140,4 +162,3 @@ class WindowManager:
         html = html.encode("utf-8", "replace")
         b64 = base64.b64encode(html).decode("utf-8", "replace")
         return "data:text/html;base64,{data}".format(data=b64)
-

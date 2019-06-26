@@ -19,22 +19,22 @@ class HotDOM(DOM):
         return f"$('{self.selector}')"
 
     def set_attr(self, name, value):
-        pass
+        self.call_engine_function('setProp', self.selector, name, value)
 
     def get_attr(self, name):
         return ''
 
     def set_class(self, class_or_list):
-        pass
+        self.call_engine_function('setClass', self.selector, class_or_list)
 
-    def add_class(self, class_):
-        pass
+    def add_class(self, class_or_list):
+        self.call_engine_function('addClass', self.selector, class_or_list)
 
-    def remove_class(self, class_):
-        pass
+    def remove_class(self, class_or_list):
+        self.call_engine_function('removeClass', self.selector, class_or_list)
 
     def set_innerhtml(self, s):
-        pass
+        self.call_engine_function('setHtml', self.selector, s)
 
     def set_innertext(self, s):
         self.call_engine_function('setText', self.selector, s)
@@ -59,7 +59,7 @@ class HotDOM(DOM):
             else:
                 code = f"{self.jquery_sel}{code}"
 
-        print('execute_js', code)
+        logger.debug('execute_js', code)
         self.browser.ExecuteJavascript(code)
 
     def execute_js_with_return(self, code):
@@ -79,8 +79,10 @@ class HotDOM(DOM):
 
     def bind_event(self, event_name, handler):
         js_name = get_python_callback_js_name(handler)
-        print(f'event "{event_name}" bind with "{js_name}": {handler}')
-        bind_setting.add_jsfunction_binding(self.browser, js_name, handler)
+        logger.debug(f'"{self.selector}" "{event_name}" event bind with '
+                     f'"{js_name}": {handler}')
+
+        bind_setting.add_js_binding(self.browser, js_name, handler)
         self.call_engine_function('addBindEvent', self.selector, event_name, js_name)
 
     def set_display_none(self):
@@ -88,7 +90,7 @@ class HotDOM(DOM):
         This is usually used to hide an element
         :return:
         """
-        self.execute_js(".css('display', 'none');", True)
+        self.call_engine_function('setDisplay', self.selector, 'none')
 
     def set_display(self, mode='block'):
-        self.execute_js(f".css('display', '{mode}');", True)
+        self.call_engine_function('setDisplay', self.selector, mode)

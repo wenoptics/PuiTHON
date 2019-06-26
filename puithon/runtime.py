@@ -21,9 +21,9 @@ def get_python_callback_js_name(obj):
     return f'_py_callbacks__{obj.__name__}_{hex(id(obj))}'
 
 
-class BindingSettingThread(Thread):
+class BindFunctionThread(Thread):
     def __init__(self):
-        super().__init__()
+        super().__init__(name=self.__class__.__name__)
         self.q_function = Queue()
         self._evt_stop = Event()
 
@@ -38,9 +38,9 @@ class BindingSettingThread(Thread):
         self._evt_stop.set()
         self.join()
 
-    def add_jsfunction_binding(self, browser, js_name, py_handler):
+    def add_js_binding(self, browser, js_name, py_handler):
         self.q_function.put((browser, js_name, py_handler))
 
 
-bind_setting = BindingSettingThread()
+bind_setting = BindFunctionThread()
 bind_setting.start()
