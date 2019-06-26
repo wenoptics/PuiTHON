@@ -1,3 +1,11 @@
+"""
+Framework PuiTHON
+
+    @author: Grayson Wen
+    @email: wenoptics@gmail.com
+    @date: 6/26/2019
+
+"""
 import logging
 
 from puithon.DOM import DOM

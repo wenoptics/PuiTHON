@@ -1,8 +1,42 @@
 /**
  * The JavaScript engine for the pUIthon
+ *
+ *  @author: Grayson Wen
+ *  @email: wenoptics@gmail.com
+ *  @date: 6/26/2019
+ *
  * */
-var puithonJS = {
 
+function onEngineReady() {
+    puithonJS.init();
+}
+
+// Check Jquery
+if( ! window.jQuery) {
+    function include(filename, onload) {
+        var head = document.getElementsByTagName('head')[0];
+        var script = document.createElement('script');
+        script.src = filename;
+        script.type = 'text/javascript';
+        script.onload = script.onreadystatechange = function () {
+            if (script.readyState) {
+                if (script.readyState === 'complete' || script.readyState === 'loaded') {
+                    script.onreadystatechange = null;
+                    onload();
+                }
+            } else {
+                onload();
+            }
+        };
+        head.appendChild(script);
+    }
+    include('https://code.jquery.com/jquery-3.4.1.slim.min.js', onEngineReady)
+} else {
+    // Jquery already defined
+    onEngineReady();
+}
+
+var puithonJS = {
     _domEventMap: {},
     addBindEvent: function (dom, event, pyHandlerSymbol) {
         // todo Deal with dynamic loaded elements
@@ -22,7 +56,7 @@ var puithonJS = {
     /**
      * Send value to python
      * */
-    pollValue: function(what, value) {
+    pollValue: function (what, value) {
         pyJsReturnPut(what, value);
     },
 
@@ -55,6 +89,10 @@ var puithonJS = {
 
     getValue: function (_poll_key, dom) {
         this.pollValue(_poll_key, $(dom).val())
+    },
+
+    init: function () {
+        this.pollValue('_event__engine_ready', true)
     }
 
 };

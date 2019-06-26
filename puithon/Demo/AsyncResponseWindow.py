@@ -63,17 +63,15 @@ class AsyncResponseWindow(Window):
             self.widget_result_text.set_innertext(result)
             self._get_dom_by_selector('p').remove_class('success')
 
-    def on_dom_ready(self):
+    def on_window_ready(self):
         self.register_handlers()
 
 
 if __name__ == '__main__':
-
     logging.basicConfig(level=logging.DEBUG)
 
     mgr = WindowManager()
     asyncWindow = AsyncResponseWindow()
     mgr.new_window(asyncWindow)
     mgr.show_window(asyncWindow)
-
     mgr.serve()

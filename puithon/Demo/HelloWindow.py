@@ -1,4 +1,6 @@
-from puithon.DOM import DOM
+import logging
+
+from puithon.HotDOM import HotDOM
 from puithon.Window import Window, WindowManager
 
 
@@ -17,6 +19,7 @@ class HelloWindow(Window):
             <label for="name">Name:</label>
             <input type="text" id="name" value='twin'>
             <button id="ok-button">OK</button>
+            <button id="reset-button">Reset</button>
             
             </body>
             </html>
@@ -27,27 +30,31 @@ class HelloWindow(Window):
         event_bridge = self._event_bridge
 
         # The widget to get the 'name' from user input
-        textinput = DOM('#name')
+        textinput = self._get_dom_by_selector('#name')
 
         @event_bridge('#ok-button', 'click')
-        def on_ok_clicked(sender: DOM, event):
-            name = textinput.get_attr('value')
-            print('the name is', name)
-            sender.get_innertext('Sure!')
+        def on_ok_clicked(sender: HotDOM, event):
+            name = textinput.get_value()
+            print(f'the name is "{name}"')
+            sender.set_innertext('Sure!')
 
-        @event_bridge(textinput, 'change')
-        def on_input_text_change(sender: DOM, event):
-            print('onChange: name =', sender.get_attr('value'))
+        @event_bridge(textinput, 'keyup')
+        def on_input_text_change(sender: HotDOM, event):
+            print('keyup: value =', sender.get_value())
+
+        @event_bridge('#reset-button', 'click')
+        def on_reset(sender: HotDOM, event):
+            self._get_dom_by_selector('#ok-button').set_innertext('OK')
+
+    def on_window_ready(self):
+        self.register_handlers()
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
 
     mgr = WindowManager()
-
     helloWindow = HelloWindow()
     mgr.new_window(helloWindow)
     mgr.show_window(helloWindow)
-
-    helloWindow.register_handlers()
-
     mgr.serve()

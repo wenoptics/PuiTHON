@@ -1,3 +1,11 @@
+"""
+Framework PuiTHON
+
+    @author: Grayson Wen
+    @email: wenoptics@gmail.com
+    @date: 6/26/2019
+
+"""
 import base64
 import sys
 import functools
@@ -8,6 +16,9 @@ from cefpython3 import cefpython as cef
 
 from puithon.HotDOM import HotDOM
 from puithon.runtime import jsreturned
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class HandlerThread:
@@ -45,6 +56,8 @@ class _LoadHandler:
 
 class Window:
 
+    JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
+
     def __init__(self, height=600, width=400, window_title=None):
         self.window_title = window_title
         self.height = height
@@ -58,7 +71,7 @@ class Window:
         """
         A wrapper function
 
-        Typically used as a decorator for a the event callbacks
+        Typically used as a decorator for register a event callback
 
         e.g.
 
@@ -73,12 +86,21 @@ class Window:
         """
 
         def wrapper_o(func):
+
+            ori_func = func
+
+            # Wrap the function for value
+            @functools.wraps(func)
+            def dom_wrapped(sender, evt):
+                ori_func(HotDOM(sender, self._browser), evt)
+            func = dom_wrapped
+
             if new_thread:
                 # Wrap with thread
-                # @functools.wraps(func)
-                # def thread_wrapped(*args, **kwargs):
-                #     HandlerThread(func).handler_with_args(*args, **kwargs)
-                func = HandlerThread(func).handler_with_args
+                @functools.wraps(ori_func)
+                def thread_wrapped(*args, **kwargs):
+                    HandlerThread(dom_wrapped).handler_with_args(*args, **kwargs)
+                func = thread_wrapped
 
             _dom = dom
             if type(dom) is str:
@@ -101,10 +123,29 @@ class Window:
         pass
 
     def _on_dom_ready(self):
-        jsreturned.subscribe(self._browser)
-        self.on_dom_ready()
+        """
+        Do not override this. Use .on_window_ready() instead.
 
-    def on_dom_ready(self):
+        :return:
+        """
+        logger.debug('_on_dom_ready')
+
+        # Subscribe current browser for javascript value returned
+        jsreturned.subscribe(self._browser)
+
+        # Get callback on engine ready
+        jsreturned.on_value('_event__engine_ready',
+                            lambda *_: self._on_engine_ready())
+
+        # Inject puithonJS the engine
+        self._browser.ExecuteJavascript(open(self.JS_ENGINE_FILE, 'r').read())
+
+    def _on_engine_ready(self):
+        logger.debug('_on_engine_ready')
+        # Call custom callback
+        self.on_window_ready()
+
+    def on_window_ready(self):
         """
         Override this to be called on DOM ready
 

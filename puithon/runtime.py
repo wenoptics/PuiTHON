@@ -1,3 +1,11 @@
+"""
+Framework PuiTHON
+
+    @author: Grayson Wen
+    @email: wenoptics@gmail.com
+    @date:
+
+"""
 from collections import defaultdict
 from functools import partial
 from queue import Queue
@@ -68,6 +76,17 @@ class JavascriptReturnThread(StoppableThread):
         :return:
         """
         return self.q_dict_waiting[what].get()
+
+    def on_value(self, what, handler):
+        """
+        Asynchronous approach the get called on value
+
+        :param what:
+        :param handler:
+        :return:
+        """
+        from threading import Thread
+        Thread(target=lambda: handler(self.wait_for_value(what))).start()
 
     def subscribe(self, browser):
         """
