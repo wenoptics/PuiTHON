@@ -18,4 +18,6 @@ python language feature.
 
  - Decoupled `views`, easy migrate from _Platform Application_ -> _Web Application_ or vice versa.
  
+ ## Todo
  
+ - [ ] Set Window size
