@@ -20,4 +20,5 @@ python language feature.
  
  ## Todo
  
- - [ ] Set Window size
+ - [x] Set Window size
+ 

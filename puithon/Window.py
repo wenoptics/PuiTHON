@@ -7,8 +7,10 @@ Framework PuiTHON
 
 """
 import base64
+import platform
 import sys
 import functools
+import ctypes
 from pathlib import Path
 from threading import Thread
 
@@ -58,14 +60,13 @@ class Window:
 
     JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
 
-    def __init__(self, height=600, width=400, window_title=None):
+    def __init__(self, winx=0, winy=0, winwidth=900, winheight=600, window_title=None):
         self.window_title = window_title
-        self.height = height
-        self.width = width
-        self._browser = None
+        self.window_init_rect = [winx, winy, winwidth, winheight]
+        self.browser = None
 
     def _get_dom_by_selector(self, selector) -> HotDOM:
-        return HotDOM(selector, self._browser)
+        return HotDOM(selector, self.browser)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
         """
@@ -92,7 +93,7 @@ class Window:
             # Wrap the function for value
             @functools.wraps(func)
             def dom_wrapped(sender, evt):
-                ori_func(HotDOM(sender, self._browser), evt)
+                ori_func(HotDOM(sender, self.browser), evt)
             func = dom_wrapped
 
             if new_thread:
@@ -131,14 +132,14 @@ class Window:
         logger.debug('_on_dom_ready')
 
         # Subscribe current browser for javascript value returned
-        jsreturned.subscribe(self._browser)
+        jsreturned.subscribe(self.browser)
 
         # Get callback on engine ready
         jsreturned.on_value('_event__engine_ready',
                             lambda *_: self._on_engine_ready())
 
         # Inject puithonJS the engine
-        self._browser.ExecuteJavascript(open(self.JS_ENGINE_FILE, 'r').read())
+        self.browser.ExecuteJavascript(open(self.JS_ENGINE_FILE, 'r').read())
 
     def _on_engine_ready(self):
         logger.debug('_on_engine_ready')
@@ -181,13 +182,31 @@ class WindowManager:
     def show_window(self, window: Window):
         assert window in self.list_windows, 'use new_window() to initialize a new window'
 
-        window._browser = cef.CreateBrowserSync(
+        # Set window size
+        window_info = cef.WindowInfo()
+        # This call has effect only on Mac and Linux,
+        #   for windows, we will use win32api to set move and set the window size. See below.
+        # All rect coordinates are applied including X and Y parameters.
+        window_info.SetAsChild(0, window.window_init_rect)
+
+        window.browser = cef.CreateBrowserSync(
             url=window.page_uri(),
             window_title=window.window_title,
+            window_info=window_info,
             settings={'file_access_from_file_urls_allowed': True, }
         )
 
-        window._browser.SetClientHandler(_LoadHandler(window._on_dom_ready))
+        window.browser.SetClientHandler(_LoadHandler(window._on_dom_ready))
+
+        if platform.system() == "Windows":
+            # Set the window size on Windows
+            window_handle = window.browser.GetOuterWindowHandle()
+            insert_after_handle = 0
+            # X and Y parameters are ignored by setting the SWP_NOMOVE flag
+            SWP_NOMOVE = 0x0002
+            # noinspection PyUnresolvedReferences
+            ctypes.windll.user32.SetWindowPos(window_handle, insert_after_handle,
+                                              *window.window_init_rect, SWP_NOMOVE)
 
     def serve(self):
         """

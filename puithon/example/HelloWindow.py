@@ -54,7 +54,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     mgr = WindowManager()
-    helloWindow = HelloWindow()
+    helloWindow = HelloWindow(winheight=500, winwidth=500)
     mgr.new_window(helloWindow)
     mgr.show_window(helloWindow)
     mgr.serve()
