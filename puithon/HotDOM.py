@@ -22,6 +22,28 @@ class HotDOM(DOM):
         self.selector = selector
         self._dom_attr = {}
 
+    def call_engine_function(self, func_name: str, *args, **kwargs):
+        _ENGINE_VAR = 'puithonJS'
+        if not func_name.startswith(_ENGINE_VAR + '.'):
+            func_name = f'{_ENGINE_VAR}.{func_name}'
+        self.browser.ExecuteFunction(func_name, *args, **kwargs)
+
+    def call_engine_with_poll(self, func_name: str, *args, **kwargs):
+        """
+        For those function calls that need poll values on the Javascript side
+        Typically, they are get*() functions
+
+        :param func_name:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        self.call_engine_function(func_name, self._get_js_returned_key(),
+                                  *args, **kwargs)
+
+    def _get_js_returned_key(self):
+        return f'_brz{id(self.browser)}_{self.selector}'
+
     @property
     def jquery_sel(self):
         return f"$('{self.selector}')"
@@ -69,28 +91,6 @@ class HotDOM(DOM):
 
         logger.debug('execute_js', code)
         self.browser.ExecuteJavascript(code)
-
-    def call_engine_function(self, func_name: str, *args, **kwargs):
-        _ENGINE_VAR = 'puithonJS'
-        if not func_name.startswith(_ENGINE_VAR + '.'):
-            func_name = f'{_ENGINE_VAR}.{func_name}'
-        self.browser.ExecuteFunction(func_name, *args, **kwargs)
-
-    def call_engine_with_poll(self, func_name: str, *args, **kwargs):
-        """
-        For those function calls that need poll values on the Javascript side
-        Typically, they are get*() functions
-
-        :param func_name:
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        self.call_engine_function(func_name, self._get_js_returned_key(),
-                                  *args, **kwargs)
-
-    def _get_js_returned_key(self):
-        return f'_brz{id(self.browser)}_{self.selector}'
 
     def bind_event(self, event_name, handler):
         js_name = get_python_callback_js_name(handler)

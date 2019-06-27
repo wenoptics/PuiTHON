@@ -2,7 +2,6 @@ import functools
 import logging
 from pathlib import Path
 
-from puithon.DOM import DOM
 from puithon.Window import Window
 from puithon.runtime import RuntimeManager
 
@@ -12,10 +11,10 @@ class AsyncResponseWindow(Window):
     def __init__(self, *args, **kwargs):
         super().__init__(window_title=self.__class__.__name__, *args, **kwargs)
 
-        self.widget_spinner = DOM('')
+        self.widget_spinner = None
         # The span to show the result
-        self.widget_result_text = DOM('')
-        self.widget_input = DOM('')
+        self.widget_result_text = None
+        self.widget_input = None
 
     def page_uri(self):
         html_file = Path(__file__).with_suffix('.html')
@@ -46,7 +45,7 @@ class AsyncResponseWindow(Window):
         def get_result_slow(sender, evt):
             print('get_result_slow() get called')
             import time
-            time.sleep(2)
+            time.sleep(1)
 
             val = self.widget_input.get_value()
             print('inputbox =', val)
