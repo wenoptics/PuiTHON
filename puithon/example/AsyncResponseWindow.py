@@ -3,7 +3,8 @@ import logging
 from pathlib import Path
 
 from puithon.DOM import DOM
-from puithon.Window import Window, WindowManager
+from puithon.Window import Window
+from puithon.runtime import RuntimeManager
 
 
 class AsyncResponseWindow(Window):
@@ -65,12 +66,15 @@ class AsyncResponseWindow(Window):
     def on_window_ready(self):
         self.register_handlers()
 
+    def on_before_close(self):
+        # Shutdown the whole thing
+        RuntimeManager.get_instance().shutdown()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
-    mgr = WindowManager()
     asyncWindow = AsyncResponseWindow()
-    mgr.new_window(asyncWindow)
-    mgr.show_window(asyncWindow)
-    mgr.serve()
+    window_manager = RuntimeManager.get_instance().WindowManager
+    window_manager.window_show(asyncWindow)
+    RuntimeManager.get_instance().start()

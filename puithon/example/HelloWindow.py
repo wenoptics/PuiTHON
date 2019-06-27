@@ -1,9 +1,8 @@
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
 from puithon.HotDOM import HotDOM
 from puithon.Window import Window
-from puithon.runtime import window_managing
+from puithon.runtime import RuntimeManager
 
 
 class HelloWindow(Window):
@@ -53,9 +52,12 @@ class HelloWindow(Window):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+
     helloWindow = HelloWindow(winheight=500, winwidth=500)
-    window_managing.window_show(helloWindow)
-    window_managing.run()
+    window_manager = RuntimeManager.get_instance().WindowManager
+    window_manager.window_show(helloWindow)
+    RuntimeManager.get_instance().start()
 
 
 

@@ -46,9 +46,13 @@ class BindFunctionThread(StoppableThread):
         self.q_function = Queue()
 
     def _routine(self):
-        browser, jsname, pyhandler, = self.q_function.get()
-        global_js_bindings[browser].SetFunction(jsname, pyhandler)
-        browser.SetJavascriptBindings(global_js_bindings[browser])
+        try:
+            browser, jsname, pyhandler, = self.q_function.get_nowait()
+        except queue.Empty:
+            pass
+        else:
+            global_js_bindings[browser].SetFunction(jsname, pyhandler)
+            browser.SetJavascriptBindings(global_js_bindings[browser])
 
     def add_js_binding(self, browser, js_name, py_handler):
         self.q_function.put((browser, js_name, py_handler))
@@ -69,9 +73,13 @@ class JavascriptReturnThread(StoppableThread):
         self.q_dict_waiting = defaultdict(Queue)
 
     def _routine(self):
-        what, value = self.q_value.get()
-        # Dispatch the value message
-        self.q_dict_waiting[what].put(value)
+        try:
+            what, value = self.q_value.get_nowait()
+        except queue.Empty:
+            pass
+        else:
+            # Dispatch the value message
+            self.q_dict_waiting[what].put(value)
 
     def put_value(self, what, value):
         """
@@ -111,7 +119,7 @@ class JavascriptReturnThread(StoppableThread):
         :param browser:
         :return:
         """
-        bind_setting.add_js_binding(browser, 'pyJsReturnPut', self.put_value)
+        RuntimeManager.get_instance().FunctionBinding.add_js_binding(browser, 'pyJsReturnPut', self.put_value)
 
 
 class WindowManaging:
@@ -127,16 +135,23 @@ class WindowManaging:
         def __init__(self):
             self.list_windows = []
 
-        class LoadHandler:
-            def __init__(self, on_dom_ready):
+        class _CEFLoadHandler:
+            def __init__(self, on_dom_ready=None, on_before_close=None):
+                self._on_before_close = on_before_close
                 self._on_dom_ready = on_dom_ready
 
             def OnLoadingStateChange(self, browser, is_loading, **_):
                 """Called when the loading state has changed."""
+                logging.debug(f'OnLoadingStateChange, {browser}')
                 if not is_loading:
                     # Loading is complete. DOM is ready.
                     if self._on_dom_ready is not None:
                         self._on_dom_ready()
+
+            def OnBeforeClose(self, browser):
+                logging.debug(f'OnBeforeClose, {browser}')
+                if self._on_before_close is not None:
+                    self._on_before_close()
 
         def show_window(self, window):
             self.list_windows.append(window)
@@ -156,7 +171,10 @@ class WindowManaging:
                 settings={'file_access_from_file_urls_allowed': True, }
             )
 
-            window.browser.SetClientHandler(self.LoadHandler(window._on_dom_ready))
+            window.browser.SetClientHandler(self._CEFLoadHandler(
+                on_dom_ready=window._on_dom_ready,
+                on_before_close=window._on_before_close,
+            ))
 
             if platform.system() == "Windows":
                 # Set the window size on Windows
@@ -211,6 +229,9 @@ class WindowManaging:
                 if func:
                     func()
 
+        logger.debug('messaging loop exited')
+        cef.Shutdown()
+
     def run_on_ui_thread(self, func, *args, **kwargs):
         """
         Run some thing on th UI thread
@@ -224,12 +245,37 @@ class WindowManaging:
     def window_show(self, window):
         self.run_on_ui_thread(self.window_manager.show_window, window)
 
-    def stop(self):
+    def shutdown(self):
         self._evt_stop.set()
 
 
-bind_setting = BindFunctionThread()
-bind_setting.start()
-jsreturned = JavascriptReturnThread()
-jsreturned.start()
-window_managing = WindowManaging()
+class RuntimeManager:
+
+    __instance = None
+
+    @classmethod
+    def get_instance(cls) -> 'RuntimeManager':
+        if RuntimeManager.__instance is None:
+            RuntimeManager()
+        return RuntimeManager.__instance
+
+    def __init__(self):
+        if RuntimeManager.__instance is not None:
+            raise RuntimeError('This is a singleton')
+        RuntimeManager.__instance = self
+
+        # ----------------
+
+        self.FunctionBinding = BindFunctionThread()
+        self.JavascriptReturned = JavascriptReturnThread()
+        self.WindowManager = WindowManaging()
+
+    def start(self):
+        self.FunctionBinding.start()
+        self.JavascriptReturned.start()
+        self.WindowManager.run()
+
+    def shutdown(self):
+        self.FunctionBinding.stop()
+        self.JavascriptReturned.stop()
+        self.WindowManager.shutdown()

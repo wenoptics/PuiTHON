@@ -2,7 +2,7 @@ import logging
 
 from puithon.HotDOM import HotDOM
 from puithon.Window import Window
-from puithon.runtime import window_managing, WindowManaging
+from puithon.runtime import WindowManaging, RuntimeManager
 
 
 class HelloWindowParent(Window):
@@ -59,6 +59,10 @@ class HelloWindowParent(Window):
     def on_window_ready(self):
         self.register_handlers()
 
+    def on_before_close(self):
+        # Shutdown the whole thing
+        RuntimeManager.get_instance().shutdown()
+
 
 class HelloWindowChild(Window):
     def __init__(self, *args, **kwargs):
@@ -87,11 +91,15 @@ class HelloWindowChild(Window):
             # Get the parent window text
             self.wg_textarea.set_innertext(self.parent_window.wg_textinput.get_value())
 
+    def on_before_close(self):
+        print('child window closing')
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
+    window_manager = RuntimeManager.get_instance().WindowManager
     # Create the parent window
-    win_parent = HelloWindowParent(window_managing, winheight=500, winwidth=700)
-    window_managing.window_show(win_parent)
-    window_managing.run()
+    win_parent = HelloWindowParent(window_manager, winheight=500, winwidth=700)
+    window_manager.window_show(win_parent)
+    RuntimeManager.get_instance().start()

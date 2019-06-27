@@ -13,9 +13,11 @@ from pathlib import Path
 from threading import Thread
 
 from puithon.HotDOM import HotDOM
-from puithon.runtime import jsreturned
 
 import logging
+
+from puithon.runtime import RuntimeManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -72,6 +74,9 @@ class Window:
         # todo Potentially, the self.browser can be None.
         #  Thus the best practice to call this function is after dom is ready (i.e. in on_window_ready())
         #  Pass the `browser` somewhere/sometime-later to get better flexibility.
+        if self.browser is None:
+            logging.warning('self.browser is None. Consider to call this after DOM is ready. '
+                            'e.g. Call this in .on_window_ready()')
         return HotDOM(selector, self.browser)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
@@ -139,16 +144,20 @@ class Window:
         self._status = self.WindowStatus.SHOWN
 
         # Subscribe current browser for javascript value returned
-        jsreturned.subscribe(self.browser)
+        RuntimeManager.get_instance().JavascriptReturned.subscribe(self.browser)
 
         # Get callback on engine ready
-        jsreturned.on_value('_event__engine_ready',
-                            lambda *_: self._on_engine_ready())
+        RuntimeManager.get_instance().JavascriptReturned\
+            .on_value('_event__engine_ready', lambda *_: self._on_engine_ready())
 
         # Inject puithonJS the engine
         self.browser.ExecuteJavascript(open(self.JS_ENGINE_FILE, 'r').read())
 
     def _on_engine_ready(self):
+        """
+        Do not override this
+        :return:
+        """
         logger.debug('_on_engine_ready')
 
         self._status = self.WindowStatus.READY
@@ -156,9 +165,21 @@ class Window:
         # Call custom callback
         self.on_window_ready()
 
+    def _on_before_close(self):
+        logger.debug('_on_before_close')
+        self.on_before_close()
+
     def on_window_ready(self):
         """
         Override this to be called on DOM ready
+
+        :return:
+        """
+        pass
+
+    def on_before_close(self):
+        """
+        Override this to be called before the window is closed
 
         :return:
         """

@@ -9,7 +9,7 @@ Framework PuiTHON
 import logging
 
 from puithon.DOM import DOM
-from puithon.runtime import get_python_callback_js_name, bind_setting, jsreturned
+from puithon.runtime import get_python_callback_js_name, RuntimeManager
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class HotDOM(DOM):
         logger.debug(f'"{self.selector}" "{event_name}" event bind with '
                      f'"{js_name}": {handler}')
 
-        bind_setting.add_js_binding(self.browser, js_name, handler)
+        RuntimeManager.get_instance().FunctionBinding.add_js_binding(self.browser, js_name, handler)
         self.call_engine_function('addBindEvent', self.selector, event_name, js_name)
 
     def set_display_none(self):
@@ -112,4 +112,4 @@ class HotDOM(DOM):
 
     def get_value(self):
         self.call_engine_with_poll('getValue', self.selector)
-        return jsreturned.wait_for_value(self._get_js_returned_key())
+        return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(self._get_js_returned_key())

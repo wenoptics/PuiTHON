@@ -30,6 +30,7 @@ if( ! window.jQuery) {
         };
         head.appendChild(script);
     }
+    // todo Localized JQuery.js
     include('https://code.jquery.com/jquery-3.4.1.slim.min.js', onEngineReady)
 } else {
     // Jquery already defined
