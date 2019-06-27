@@ -50,6 +50,9 @@ class HelloWindow(Window):
     def on_window_ready(self):
         self.register_handlers()
 
+    def on_before_close(self):
+        RuntimeManager.get_instance().shutdown()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

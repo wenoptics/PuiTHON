@@ -17,7 +17,7 @@ class AsyncResponseWindow(Window):
         self.widget_input = None
 
     def page_uri(self):
-        html_file = Path(__file__).with_suffix('.html')
+        html_file = Path(__file__).with_suffix('.html').resolve()
         return f'file://{str(html_file)}'
 
     def spinning(self, func):

@@ -1,7 +1,7 @@
 # puithon (Python UI Framework)
 
 A python UI framework that enables cross-platform compatibility, embraces web technologies and 
-python language feature.
+python language features.
 
 ## Technology
 
