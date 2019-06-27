@@ -1,6 +1,6 @@
 # puithon (Python UI Framework)
 
-Proposing: A python UI framework that enables cross-platform compatibility, embraces web technologies and 
+A python UI framework that enables cross-platform compatibility, embraces web technologies and 
 python language feature.
 
 ## Technology
@@ -21,4 +21,13 @@ python language feature.
  ## Todo
  
  - [x] Set Window size
+ 
+ ## Roadmap
+ 
+ - Initiative: A framework for easy gluing HTML based frontend with Python backend, for desktop-based applications.
+ 
+ - Phrase 2: Python encapsulated HTML view components for modular platform specific frontend development, provide 
+    decoupled view modules.
+    
+ - Phrase 3: A WYSIWYG editor for desktop GUI development.
  
