@@ -8,10 +8,15 @@ Framework PuiTHON
 """
 from threading import Thread, Event
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class StoppableThread(Thread):
-    def __init__(self):
-        super().__init__(name=self.__class__.__name__)
+    def __init__(self, name=None):
+        if name is None:
+            name = self.__class__.__name__
+        super().__init__(name=name)
         self._evt_stop = Event()
 
     def run(self) -> None:
@@ -32,5 +37,7 @@ class StoppableThread(Thread):
         raise NotImplementedError()
 
     def stop(self):
+        logging.debug(f'thread {self} stop requested')
         self._evt_stop.set()
         self.join()
+        logging.debug(f'thread {self} stopped')

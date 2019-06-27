@@ -6,13 +6,22 @@ Framework PuiTHON
     @date:
 
 """
+import queue
+import threading
 from collections import defaultdict
 from functools import partial
 from queue import Queue
+import platform
+import sys
+import ctypes
+from threading import Event
 
 from cefpython3 import cefpython as cef
 
 from puithon.ThreadModel import StoppableThread
+
+import logging
+logger = logging.getLogger(__name__)
 
 _py_callbacks_ = {}
 global_js_bindings = defaultdict(partial(
@@ -105,7 +114,122 @@ class JavascriptReturnThread(StoppableThread):
         bind_setting.add_js_binding(browser, 'pyJsReturnPut', self.put_value)
 
 
+class WindowManaging:
+    """
+    WindowManaging for window manage purpose. This is the UI Thread. Should be run on the main thread.
+
+    todo Make this a singleton
+
+    """
+
+    class WindowManager:
+
+        def __init__(self):
+            self.list_windows = []
+
+        class LoadHandler:
+            def __init__(self, on_dom_ready):
+                self._on_dom_ready = on_dom_ready
+
+            def OnLoadingStateChange(self, browser, is_loading, **_):
+                """Called when the loading state has changed."""
+                if not is_loading:
+                    # Loading is complete. DOM is ready.
+                    if self._on_dom_ready is not None:
+                        self._on_dom_ready()
+
+        def show_window(self, window):
+            self.list_windows.append(window)
+
+            # Set window size
+            window_info = cef.WindowInfo()
+            # This call has effect only on Mac and Linux,
+            #   for windows, we will use win32api to set move and set the window size. See below.
+            # All rect coordinates are applied including X and Y parameters.
+            window_info.SetAsChild(0, window.window_init_rect)
+
+            # CreateBrowserSync can only be called on the UI thread
+            window.browser = cef.CreateBrowserSync(
+                url=window.page_uri(),
+                window_title=window.window_title,
+                window_info=window_info,
+                settings={'file_access_from_file_urls_allowed': True, }
+            )
+
+            window.browser.SetClientHandler(self.LoadHandler(window._on_dom_ready))
+
+            if platform.system() == "Windows":
+                # Set the window size on Windows
+                window_handle = window.browser.GetOuterWindowHandle()
+                insert_after_handle = 0
+                # X and Y parameters are ignored by setting the SWP_NOMOVE flag
+                SWP_NOMOVE = 0x0002
+                # noinspection PyUnresolvedReferences
+                ctypes.windll.user32.SetWindowPos(window_handle, insert_after_handle,
+                                                  *window.window_init_rect, SWP_NOMOVE)
+
+    def __init__(self):
+        # super().__init__(name='WindowManagingThread--UIThread')
+        self.window_manager = self.WindowManager()
+        self.ui_exec_queue = Queue()
+        self._evt_stop = Event()
+        self._cef_init()
+
+    @staticmethod
+    def _cef_init():
+        # To shutdown all CEF processes on error
+        sys.excepthook = cef.ExceptHook
+
+        cef.Initialize(
+            settings={
+                # "product_version": "MyProduct/10.00",
+                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
+                # 'context_menu': {'enabled': False},
+                'downloads_enabled': False
+            }, switches={
+                'allow_file_access': b'1',
+                'allow_file_access_from_files': b'1'
+            })
+
+    def run(self):
+        """
+        Start the UI message loop. This is be called on the main thread
+        :return:
+        """
+        assert threading.current_thread() is threading.main_thread()
+
+        self._evt_stop.clear()
+        # This is the UI Thread
+        while not self._evt_stop.is_set():
+            # Todo Call this in some sort of period to increase performance
+            cef.MessageLoopWork()
+            try:
+                func = self.ui_exec_queue.get_nowait()
+            except queue.Empty:
+                pass
+            else:
+                if func:
+                    func()
+
+    def run_on_ui_thread(self, func, *args, **kwargs):
+        """
+        Run some thing on th UI thread
+
+        :param func:
+        :return:
+        """
+        # cef.PostTask(cef.TID_UI, func, *args, **kwargs)
+        self.ui_exec_queue.put(partial(func, *args, **kwargs))
+
+    def window_show(self, window):
+        self.run_on_ui_thread(self.window_manager.show_window, window)
+
+    def stop(self):
+        self._evt_stop.set()
+
+
 bind_setting = BindFunctionThread()
 bind_setting.start()
 jsreturned = JavascriptReturnThread()
 jsreturned.start()
+window_managing = WindowManaging()

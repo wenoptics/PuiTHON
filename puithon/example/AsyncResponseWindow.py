@@ -8,9 +8,8 @@ from puithon.Window import Window, WindowManager
 
 class AsyncResponseWindow(Window):
 
-    def __init__(self, height=600, width=400, window_title=None):
-        window_title = self.__class__.__name__ if window_title is None else window_title
-        super().__init__(height=height, width=width, window_title=window_title)
+    def __init__(self, *args, **kwargs):
+        super().__init__(window_title=self.__class__.__name__, *args, **kwargs)
 
         self.widget_spinner = DOM('')
         # The span to show the result

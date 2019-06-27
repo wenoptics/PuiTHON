@@ -6,15 +6,11 @@ Framework PuiTHON
     @date: 6/26/2019
 
 """
-import base64
-import platform
-import sys
+
 import functools
-import ctypes
+from enum import Enum
 from pathlib import Path
 from threading import Thread
-
-from cefpython3 import cefpython as cef
 
 from puithon.HotDOM import HotDOM
 from puithon.runtime import jsreturned
@@ -44,19 +40,12 @@ class HandlerThread:
         return self._handler_no_args
 
 
-class _LoadHandler:
-    def __init__(self, on_dom_ready):
-        self._on_dom_ready = on_dom_ready
-
-    def OnLoadingStateChange(self, browser, is_loading, **_):
-        """Called when the loading state has changed."""
-        if not is_loading:
-            # Loading is complete. DOM is ready.
-            if self._on_dom_ready is not None:
-                self._on_dom_ready()
-
-
 class Window:
+
+    class WindowStatus(Enum):
+        INIT = 0
+        SHOWN = 1
+        READY = 2
 
     JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
 
@@ -64,8 +53,25 @@ class Window:
         self.window_title = window_title
         self.window_init_rect = [winx, winy, winwidth, winheight]
         self.browser = None
+        self._status = self.WindowStatus.INIT
+
+    @staticmethod
+    def html_to_data_uri(html):
+        """
+        Utility function
+
+        :param html:
+        :return:
+        """
+        import base64
+        html = html.encode("utf-8", "replace")
+        b64 = base64.b64encode(html).decode("utf-8", "replace")
+        return "data:text/html;base64,{data}".format(data=b64)
 
     def _get_dom_by_selector(self, selector) -> HotDOM:
+        # todo Potentially, the self.browser can be None.
+        #  Thus the best practice to call this function is after dom is ready (i.e. in on_window_ready())
+        #  Pass the `browser` somewhere/sometime-later to get better flexibility.
         return HotDOM(selector, self.browser)
 
     def _event_bridge(self, dom, event_name, new_thread=True):
@@ -130,6 +136,7 @@ class Window:
         :return:
         """
         logger.debug('_on_dom_ready')
+        self._status = self.WindowStatus.SHOWN
 
         # Subscribe current browser for javascript value returned
         jsreturned.subscribe(self.browser)
@@ -143,6 +150,9 @@ class Window:
 
     def _on_engine_ready(self):
         logger.debug('_on_engine_ready')
+
+        self._status = self.WindowStatus.READY
+
         # Call custom callback
         self.on_window_ready()
 
@@ -154,81 +164,10 @@ class Window:
         """
         pass
 
+    @property
+    def is_ready(self):
+        return self._status is self.WindowStatus.READY
 
-class WindowManager:
-    def __init__(self):
-        self.list_windows = []
-        self._cef_init()
-
-    def _cef_init(self):
-        # To shutdown all CEF processes on error
-        sys.excepthook = cef.ExceptHook
-
-        cef.Initialize(
-            settings={
-                # "product_version": "MyProduct/10.00",
-                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
-                # 'context_menu': {'enabled': False},
-                'downloads_enabled': False
-            }, switches={
-                'allow_file_access': b'1',
-                'allow_file_access_from_files': b'1'
-            })
-
-    def new_window(self, window: Window):
-        assert window not in self.list_windows
-        self.list_windows.append(window)
-
-    def show_window(self, window: Window):
-        assert window in self.list_windows, 'use new_window() to initialize a new window'
-
-        # Set window size
-        window_info = cef.WindowInfo()
-        # This call has effect only on Mac and Linux,
-        #   for windows, we will use win32api to set move and set the window size. See below.
-        # All rect coordinates are applied including X and Y parameters.
-        window_info.SetAsChild(0, window.window_init_rect)
-
-        window.browser = cef.CreateBrowserSync(
-            url=window.page_uri(),
-            window_title=window.window_title,
-            window_info=window_info,
-            settings={'file_access_from_file_urls_allowed': True, }
-        )
-
-        window.browser.SetClientHandler(_LoadHandler(window._on_dom_ready))
-
-        if platform.system() == "Windows":
-            # Set the window size on Windows
-            window_handle = window.browser.GetOuterWindowHandle()
-            insert_after_handle = 0
-            # X and Y parameters are ignored by setting the SWP_NOMOVE flag
-            SWP_NOMOVE = 0x0002
-            # noinspection PyUnresolvedReferences
-            ctypes.windll.user32.SetWindowPos(window_handle, insert_after_handle,
-                                              *window.window_init_rect, SWP_NOMOVE)
-
-    def serve(self):
-        """
-        Show the CEFPython window
-        This method will block
-
-        :return:
-        """
-        cef.MessageLoop()
-
-        # Clean up
-        cef.QuitMessageLoop()
-        cef.Shutdown()
-
-    @staticmethod
-    def html_to_data_uri(html):
-        """
-        Utility function
-
-        :param html:
-        :return:
-        """
-        html = html.encode("utf-8", "replace")
-        b64 = base64.b64encode(html).decode("utf-8", "replace")
-        return "data:text/html;base64,{data}".format(data=b64)
+    @property
+    def is_shown(self):
+        return self._status is self.WindowStatus.SHOWN

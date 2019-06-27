@@ -1,13 +1,15 @@
 import logging
+logging.basicConfig(level=logging.DEBUG)
 
 from puithon.HotDOM import HotDOM
-from puithon.Window import Window, WindowManager
+from puithon.Window import Window
+from puithon.runtime import window_managing
 
 
 class HelloWindow(Window):
 
     def page_uri(self):
-        return WindowManager.html_to_data_uri("""
+        return self.html_to_data_uri("""
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -51,10 +53,9 @@ class HelloWindow(Window):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-
-    mgr = WindowManager()
     helloWindow = HelloWindow(winheight=500, winwidth=500)
-    mgr.new_window(helloWindow)
-    mgr.show_window(helloWindow)
-    mgr.serve()
+    window_managing.window_show(helloWindow)
+    window_managing.run()
+
+
+
