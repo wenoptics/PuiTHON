@@ -80,9 +80,9 @@ class Window:
                             'e.g. Call this in .on_window_ready()')
         return HotDOM(selector, self.browser)
 
-    def _event_bridge(self, dom, event_name, new_thread=True):
+    def _event_bridge(self, dom, event_name):
         """
-        A wrapper function
+        A wrapper function. The wrapped handler will be run in a new thread
 
         Typically used as a decorator for register a event callback
 
@@ -94,7 +94,6 @@ class Window:
 
         :param dom:
         :param event_name:
-        :param new_thread:
         :return:
         """
 
@@ -108,6 +107,7 @@ class Window:
                 ori_func(HotDOM(sender, self.browser), evt)
             func = dom_wrapped
 
+            new_thread = True
             if new_thread:
                 # Wrap with thread
                 @functools.wraps(ori_func)
