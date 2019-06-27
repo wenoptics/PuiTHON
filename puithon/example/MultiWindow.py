@@ -2,12 +2,12 @@ import logging
 
 from puithon.HotDOM import HotDOM
 from puithon.Window import Window
-from puithon.runtime import WindowManaging, RuntimeManager
+from puithon.runtime import RuntimeManager
 
 
 class HelloWindowParent(Window):
 
-    def __init__(self, win_manager: WindowManaging, *args, **kwargs):
+    def __init__(self, win_manager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.win_manager = win_manager
         self.wg_textinput = None

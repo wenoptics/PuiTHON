@@ -48,6 +48,7 @@ class Window:
         INIT = 0
         SHOWN = 1
         READY = 2
+        DESTROYED = 3
 
     JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
 
@@ -168,6 +169,7 @@ class Window:
     def _on_before_close(self):
         logger.debug('_on_before_close')
         self.on_before_close()
+        self._status = self.WindowStatus.DESTROYED
 
     def on_window_ready(self):
         """

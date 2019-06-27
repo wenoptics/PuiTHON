@@ -39,7 +39,7 @@ def get_python_callback_js_name(obj):
     return f'_py_callbacks__{obj.__name__}_{hex(id(obj))}'
 
 
-class BindFunctionThread(StoppableThread):
+class _BindFunctionThread(StoppableThread):
 
     def __init__(self):
         super().__init__()
@@ -58,7 +58,7 @@ class BindFunctionThread(StoppableThread):
         self.q_function.put((browser, js_name, py_handler))
 
 
-class JavascriptReturnThread(StoppableThread):
+class _JavascriptReturnThread(StoppableThread):
     """
     On Javascript side (the js-engine), values will be pushed here
     (CEFPython does not allow instant javascript returns)
@@ -122,7 +122,7 @@ class JavascriptReturnThread(StoppableThread):
         RuntimeManager.get_instance().FunctionBinding.add_js_binding(browser, 'pyJsReturnPut', self.put_value)
 
 
-class WindowManaging:
+class _WindowManaging:
     """
     WindowManaging for window manage purpose. This is the UI Thread. Should be run on the main thread.
 
@@ -266,9 +266,9 @@ class RuntimeManager:
 
         # ----------------
 
-        self.FunctionBinding = BindFunctionThread()
-        self.JavascriptReturned = JavascriptReturnThread()
-        self.WindowManager = WindowManaging()
+        self.FunctionBinding = _BindFunctionThread()
+        self.JavascriptReturned = _JavascriptReturnThread()
+        self.WindowManager = _WindowManaging()
 
     def start(self):
         self.FunctionBinding.start()
