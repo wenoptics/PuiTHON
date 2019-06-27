@@ -8,6 +8,7 @@ Framework PuiTHON
 """
 
 import functools
+import inspect
 from enum import Enum
 from pathlib import Path
 from threading import Thread
@@ -125,7 +126,10 @@ class Window:
         return wrapper_o
 
     def page_uri(self):
-        html_file = Path(__file__).with_suffix('.html')
+        _file = inspect.getfile(self.__class__)
+        html_file = Path(_file).with_suffix('.html').resolve()  # instead of using just __file__
+        # assert html_file.is_file()
+        logger.debug(f'loading html file "{html_file}"')
         return f'file://{str(html_file)}'
 
     def close(self):
