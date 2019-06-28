@@ -112,6 +112,8 @@ class _JavascriptReturnThread(StoppableThread):
                name=f'{self.__class__.__name__}->on_value')\
             .start()
 
+        # fixme This thread will be leaked and run forever if no value received
+
     def subscribe(self, browser):
         """
         Subscribe for javascript returned values
