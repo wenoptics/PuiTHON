@@ -16,7 +16,7 @@ class AsyncResponseWindow(Window):
         self.widget_result_text = None
         self.widget_input = None
 
-    def spinning(self, func):
+    def wrap_loading(self, func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             self.widget_spinner.set_display()  # Show the spinner
@@ -37,7 +37,7 @@ class AsyncResponseWindow(Window):
         self.widget_input = self._get_dom_by_selector('#inputBox')
 
         @event_bridge('#ok-button', 'click')
-        @self.spinning
+        @self.wrap_loading
         def get_result_slow(sender, evt):
             print('get_result_slow() get called')
             import time
