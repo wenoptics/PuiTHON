@@ -163,6 +163,7 @@ class _WindowManaging:
             #   for windows, we will use win32api to set move and set the window size. See below.
             # All rect coordinates are applied including X and Y parameters.
             window_info.SetAsChild(0, window.window_init_rect)
+            window_info.windowName = window.window_title
 
             # CreateBrowserSync can only be called on the UI thread
             window.browser = cef.CreateBrowserSync(
