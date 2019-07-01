@@ -11,9 +11,24 @@ python setup.py install
 
 ## Usage
 
-See [`doc/Tutorial.md`](./doc/Tutorial.md).
+```python
+from puithon import Window, RuntimeManager
 
----
+class MyWindow(Window):
+    def page_uri(self):
+        return self.html_to_data_uri("""
+            <html>
+            <body>
+                <p>Hello PuiTHON</p>
+            </body>
+            </html>
+        """)
+```
+
+See [`doc/Tutorial.md`](./doc/Tutorial.md) for a walk-thru tutorial.
+
+Also, check [`./example`](./example/) for some snippets.
+
 ---
  
 ## Features
