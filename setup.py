@@ -2,12 +2,15 @@ from setuptools import setup
 
 setup(
     name='framework-puithon',
-    version='0.1.0',
+    version='0.1.1',
+    description='A framework for easy gluing HTML based frontend with Python backend, for desktop-based applications.',
     packages=['example', 'puithon'],
-    include_package_data=True,
-    url='',
     license='',
     author='Grayson Wen',
     author_email='wenoptics@gmail.com',
-    description='A framework for easy gluing HTML based frontend with Python backend, for desktop-based applications.'
+    url='https://github.com/wenoptics/PuiTHON',
+    include_package_data=True,
+    install_requires=[
+        'cefpython3',
+    ],
 )
