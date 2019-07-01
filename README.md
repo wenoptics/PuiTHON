@@ -3,6 +3,20 @@
 A python UI framework that enables cross-platform compatibility, embraces web technologies and 
 python language features.
 
+## Install
+
+```bash
+python setup.py install
+```
+
+## Usage
+
+See [`doc/Tutorial.md`](./doc/Tutorial.md).
+
+---
+
+todo
+
 ## Technology
 
  - CEFPython
