@@ -10,19 +10,22 @@ A simple HTML window with textbox button and etc.
 
 Craft a simple HTML with a textbox with a label, a submit button, and a paragraph element for showing results.
 
-`TutorialWindow.html`:
+**TutorialWindow.html**:
 
 ```html
 <html>
 <body>
 
+    <!-- A textbox to enter name -->
     <label>
-        Name: <input id="textbox-name" type="text">    
+        Name: <input id="textbox-name" type="text">
     </label>
     
+    <!--A submit button-->
     <button id="button-ok">OK!</button>
-    
-    <p style="background-color: gray">
+
+    <!--A text area for results-->
+    <p style="background-color: lightgray; height: 10em">
         <span id="result">It will be great to know you.</span>
     </p>
     
@@ -30,14 +33,21 @@ Craft a simple HTML with a textbox with a label, a submit button, and a paragrap
 </html>
 ```
 
-And we create a TutorialWindow class for this window. A `TutorialWindow.py` at the same level with the `TutorialWindow.html`.
+You can see the preview with your fav browser:
 
-    There are many ways to load HTML content for a window. By default, the `Window` tries to 
-    locate a same class name `.html` next to the class file. You can override the `.page_uri(self)` 
-    and return the html uri. You can also return html string like: `Window.html_to_data_uri(html_string)` 
-    For more detail about `.page_uri(self)`, see the API documentation. 
+![](image/ApplicationFrameHost_ciJ5GEPdF4.png)
 
-`TutorialWindow.py`:
+Next, we create a TutorialWindow class for this window. Create a `TutorialWindow.py` at the same level with 
+the `TutorialWindow.html`.
+
+> Notes:
+
+> There are many ways to load HTML content for a window. By default, the `Window` tries to 
+> locate a same class name `.html` next to the class file. You can override the `.page_uri(self)` 
+> and return the html uri. You can also return html string like: `Window.html_to_data_uri(html_string)` 
+> For more detail about `.page_uri(self)`, see the API documentation. 
+
+**TutorialWindow.py**:
 
 ```python
 class TutorialWindow(puithon.Window):
@@ -52,18 +62,24 @@ is closing.
 
 Initialize the window object and start the PuiTHON event loop.
 
+**TutorialWindow.py**:
+
 ```python
-# Initialize the window object
-window = TutorialWindow()
-# Show the window
-puithon.RuntimeManager.get_instance().WindowManager.window_show(window)
-# Start the PuiTHON event loop
-puithon.RuntimeManager.get_instance().start()
+if __name__ == '__main__':
+
+    # Initialize the window object
+    window = TutorialWindow()
+    
+    # Show the window
+    puithon.RuntimeManager.get_instance().WindowManager.window_show(window)
+    
+    # Start the PuiTHON event loop
+    puithon.RuntimeManager.get_instance().start()
 ```
 
-and Run `python TutorialWindow.py`, you should see:
+and run `python TutorialWindow.py`, you should see:
 
-![](sc.png-todo)
+![](image/python_S1hrhBLnWF.png)
 
 ### Step 2: Wire some actions for the view
 

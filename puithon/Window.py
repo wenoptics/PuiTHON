@@ -54,6 +54,8 @@ class Window:
     JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
 
     def __init__(self, winx=0, winy=0, winwidth=900, winheight=600, window_title=None):
+        if window_title is None:
+            window_title = self.__class__.__name__
         self.window_title = window_title
         self.window_init_rect = [winx, winy, winwidth, winheight]
         self.browser = None
