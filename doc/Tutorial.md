@@ -15,6 +15,7 @@ Craft a simple HTML with a textbox with a label, a submit button, and a paragrap
 ```html
 <html>
 <body>
+
     <label>
         Name: 
         <input id="textbox-name" type="text">    
@@ -24,6 +25,7 @@ Craft a simple HTML with a textbox with a label, a submit button, and a paragrap
     <p style="background-color: gray">
         <span id="result">It will be great to know you.</span>
     </p>
+    
 </body>
 </html>
 ```
@@ -32,7 +34,8 @@ And we create a TutorialWindow class for this window. A `TutorialWindow.py` at t
 
     There are many ways to load HTML content for a window. By default, the `Window` tries to 
     locate a same class name `.html` next to the class file. You can override the `.page_uri(self)` 
-    and return the html uri. For more detail about `.page_uri(self)`, see the API documentation. 
+    and return the html uri. You can also return html string like: `Window.html_to_data_uri(html_string)` 
+    For more detail about `.page_uri(self)`, see the API documentation. 
 
 `TutorialWindow.py`:
 
@@ -57,6 +60,10 @@ puithon.RuntimeManager.get_instance().WindowManager.window_show(window)
 # Start the PuiTHON event loop
 puithon.RuntimeManager.get_instance().start()
 ```
+
+and Run `python TutorialWindow.py`, you should see:
+
+![](sc.png-todo)
 
 ### Step 2: Wire some actions for the view
 
