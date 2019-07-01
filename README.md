@@ -14,14 +14,11 @@ python setup.py install
 See [`doc/Tutorial.md`](./doc/Tutorial.md).
 
 ---
-
-todo
-
-## Technology
-
- - CEFPython
+---
  
 ## Features
+
+todo
 
  - [ ] Window Manager
  - [ ] |-- Messaging 
