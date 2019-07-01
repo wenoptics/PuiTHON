@@ -43,16 +43,16 @@ the `TutorialWindow.html`.
 > Notes:
 
 > There are many ways to load HTML content for a window. By default, the `Window` tries to 
-> locate a same class name `.html` next to the class file. You can override the `.page_uri(self)` 
-> and return the html uri. You can also return html string like: `Window.html_to_data_uri(html_string)` 
-> For more detail about `.page_uri(self)`, see the API documentation. 
+locate a same class name `.html` next to the class file. You can override the `.page_uri(self)` 
+and return the html uri. You can also return html string like: `Window.html_to_data_uri(html_string)` 
+For more detail about `.page_uri(self)`, see the API documentation. 
 
 **TutorialWindow.py**:
 
 ```python
 class TutorialWindow(puithon.Window):
     def on_before_close(self):
-        RuntimeManager.get_instance().shutdown()
+        puithon.RuntimeManager.get_instance().shutdown()
 ```
 
 We have nothing yet but override the method `.on_before_close()` to exit the PuiTHON event loop when the window 
@@ -79,8 +79,47 @@ if __name__ == '__main__':
 
 and run `python TutorialWindow.py`, you should see:
 
-![](image/python_S1hrhBLnWF.png)
+![](image/python_k8MbFStirf.png)
+
+> Tips:
+
+> You can specify the window size on the [`Window`]() constructor call. e.g.
+
+```python
+# Initialize the window object
+window = TutorialWindow(winwidth=470, winheight=330)
+```
 
 ### Step 2: Wire some actions for the view
 
-todo
+Now we wire some logic with the button click and bring the view alive. To associate a handler with a javascript event, 
+we simple wrap the handler function with `._event_bridge()`.
+
+Create a local function `on_button(sender, evt)` and bind with the <key>click</key> event of a dom with id=`button_ok`.
+We can do this inside the overridden `.on_window_ready()`.
+
+**TutorialWindow.py**:
+
+```python
+def on_window_ready(self):
+
+    @self._event_bridge('#button-ok', 'click')
+    def on_button(sender, evt):
+        # Find the textbox
+        textbox = self._get_dom_by_selector('#textbox-name')
+        # Find the result textarea
+        result = self._get_dom_by_selector('#result')
+
+        name = textbox.get_value()
+        result.set_innertext(f"Hi {name}, it's great to meet you.")
+```
+
+> Note:
+
+> Find the widget (DOM) by css selector with `._get_dom_by_selector(css_selector)`. By only do this after the window is
+**Ready**. Whenever a dom selector is used (e.g. `._get_dom_by_selector()` or `._event_bridge()`), a good practice is 
+to do within `Window.on_window_ready()` by override it. 
+
+Now run the application again, you should have a window with a functional button:
+
+![](image/2Kjv1jUfdM.gif)
