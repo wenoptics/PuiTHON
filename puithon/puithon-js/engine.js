@@ -61,6 +61,17 @@ var puithonJS = {
         pyJsReturnPut(what, value);
     },
 
+    /**
+     * Execute a javascript code string then poll the return value to python
+     *
+     * todo Handle exceptions
+     * @param what
+     * @param jsStr
+     */
+    executeThenPoll: function (what, jsStr) {
+        this.pollValue(what, eval(jsStr))
+    },
+
     setText: function (dom, text) {
         $(dom).text(text);
     },

@@ -9,8 +9,10 @@ Framework PuiTHON
 
 import functools
 import inspect
+import time
 from enum import Enum
 from pathlib import Path
+from random import random
 from threading import Thread
 
 from puithon.HotDOM import HotDOM
@@ -54,6 +56,14 @@ class Window:
     JS_ENGINE_FILE = str(Path(__file__).parent / 'puithon-js' / 'engine.js')
 
     def __init__(self, winx=0, winy=0, winwidth=900, winheight=600, window_title=None):
+        """
+
+        :param winx: Window location left in pixel (Not working on Windows)
+        :param winy: Window location top in pixel (Not working on Windows)
+        :param winwidth: Window size
+        :param winheight: Window size
+        :param window_title: Window title, default to the class name
+        """
         if window_title is None:
             window_title = self.__class__.__name__
         self.window_title = window_title
@@ -73,6 +83,45 @@ class Window:
         html = html.encode("utf-8", "replace")
         b64 = base64.b64encode(html).decode("utf-8", "replace")
         return "data:text/html;base64,{data}".format(data=b64)
+
+    def call_engine_function(self, func_name: str, *args, **kwargs):
+        _ENGINE_VAR = 'puithonJS'
+        if not func_name.startswith(_ENGINE_VAR + '.'):
+            func_name = f'{_ENGINE_VAR}.{func_name}'
+        self.browser.ExecuteFunction(func_name, *args, **kwargs)
+
+    def run_javascript(self, code_str):
+        """
+        Run raw javascript code. This will run asynchronously and will not return anything.
+        To receive results from javascript, use `.run_javascript_with_result()`.
+
+        todo: Javascript exception
+        :param code_str: Javascript code string
+        :return:
+        """
+        self.browser.ExecuteJavascript(str(code_str))
+
+    def run_javascript_with_result(self, code_str):
+        """
+        Blocking and waiting for result
+
+        :param code_str:
+        :return:
+        """
+        assert self._status is self.WindowStatus.READY, 'This method can only be called after the window is ready'
+
+        _uniq_key = hex(hash(f'{time.time()}-{random()}'))
+        self.call_engine_function('executeThenPoll', _uniq_key, code_str)
+        return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(_uniq_key)
+
+    def show_alert(self, text):
+        """
+        Show a javascript alert.
+
+        :param text:
+        :return:
+        """
+        self.browser.ExecuteJavascript(f'alert("{str(text)}")')
 
     def _get_dom_by_selector(self, selector) -> HotDOM:
         # todo Potentially, the self.browser can be None.
@@ -139,7 +188,7 @@ class Window:
         Close the window
         :return:
         """
-        pass
+        # todo
 
     def _on_dom_ready(self):
         """

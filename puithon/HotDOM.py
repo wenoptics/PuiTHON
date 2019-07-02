@@ -52,7 +52,7 @@ class HotDOM(DOM):
         self.call_engine_function('setProp', self.selector, name, value)
 
     def get_attr(self, name):
-        return ''
+        raise NotImplementedError()  # fixme
 
     def set_class(self, class_or_list):
         self.call_engine_function('setClass', self.selector, class_or_list)
@@ -70,7 +70,7 @@ class HotDOM(DOM):
         self.call_engine_function('setText', self.selector, str(s))
 
     def get_innerhtml(self, s):
-        pass
+        raise NotImplementedError()  # fixme
 
     def get_innertext(self, s):
         return self.execute_js(".text();", True)

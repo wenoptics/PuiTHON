@@ -29,6 +29,11 @@ class HelloWindowParent(Window):
             <input type="text" id="parentTextarea" value='twin'>
             <button id="post-button">Post</button>
             
+            <br>
+            
+            <button id="alert-button">Alert</button>
+            <button id="runjs-button">Run JS</button>
+            
             </body>
             </html>
         """)
@@ -55,6 +60,15 @@ class HelloWindowParent(Window):
         @event_bridge(self.wg_textinput, 'keyup')
         def on_input_text_change(sender: HotDOM, event):
             print('keyup: value =', sender.get_value())
+
+        @event_bridge('#alert-button', 'click')
+        def on_alert_btn(sender, evt):
+            self.show_alert('This is a javascript alert')
+
+        @event_bridge('#runjs-button', 'click')
+        def on_runjs_btn(sender, evt):
+            math_result = self.run_javascript_with_result('1+1===2')
+            self.show_alert(f'1+1 = 2 ? Javascript said: {math_result}')
 
     def on_window_ready(self):
         self.register_handlers()
