@@ -68,7 +68,7 @@ class HelloWindowParent(Window):
         @event_bridge('#runjs-button', 'click')
         def on_runjs_btn(sender, evt):
             math_result = self.run_javascript_with_result('1+1===2')
-            self.show_alert(f'1+1 = 2 ? Javascript said: {math_result}')
+            self.show_alert(f'1+1 = 2? \nJavascript said: {math_result}')
 
     def on_window_ready(self):
         self.register_handlers()

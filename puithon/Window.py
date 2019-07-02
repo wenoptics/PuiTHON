@@ -114,19 +114,21 @@ class Window:
         self.call_engine_function('executeThenPoll', _uniq_key, code_str)
         return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(_uniq_key)
 
-    def show_alert(self, text):
+    def show_alert(self, text: str):
         """
         Show a javascript alert.
 
         :param text:
         :return:
         """
-        self.browser.ExecuteJavascript(f'alert("{str(text)}")')
+        # todo|fixme escaping issue. e.g. \n in text
+        text = str(text).replace('\n', '\\n').replace('\r', '\\r')
+        self.browser.ExecuteJavascript(f'alert("{text}")')
 
     def _get_dom_by_selector(self, selector) -> HotDOM:
         # todo Potentially, the self.browser can be None.
-        #  Thus the best practice to call this function is after dom is ready (i.e. in on_window_ready())
-        #  Pass the `browser` somewhere/sometime-later to get better flexibility.
+        #   Thus the best practice to call this function is after dom is ready (i.e. in on_window_ready())
+        #   Pass the `browser` somewhere/sometime-later to get better flexibility.
         if self.browser is None:
             logging.warning('self.browser is None. Consider to call this after DOM is ready. '
                             'e.g. Call this in .on_window_ready()')
