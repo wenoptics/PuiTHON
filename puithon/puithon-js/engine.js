@@ -56,7 +56,10 @@ var puithonJS = {
 
     /**
      * Send value to python
-     * */
+     *
+     * @param what The message key
+     * @param value
+     */
     pollValue: function (what, value) {
         pyJsReturnPut(what, value);
     },
@@ -65,7 +68,7 @@ var puithonJS = {
      * Execute a javascript code string then poll the return value to python
      *
      * todo Handle exceptions
-     * @param what
+     * @param what The message key
      * @param jsStr
      */
     executeThenPoll: function (what, jsStr) {
@@ -99,8 +102,28 @@ var puithonJS = {
         $(dom).prop(name, val)
     },
 
+    setAttr: function (dom, name, val) {
+        $(dom).attr(name, val)
+    },
+
     getValue: function (_poll_key, dom) {
         this.pollValue(_poll_key, $(dom).val())
+    },
+
+    getProp: function (_poll_key, dom, name) {
+        this.pollValue(_poll_key, $(dom).prop(name))
+    },
+
+    getAttr: function (_poll_key, dom, name) {
+        this.pollValue(_poll_key, $(dom).attr(name))
+    },
+
+    getText: function (_poll_key, dom) {
+        this.pollValue(_poll_key, $(dom).text())
+    },
+
+    getHtml: function (_poll_key, dom) {
+        this.pollValue(_poll_key, $(dom).html())
     },
 
     init: function () {

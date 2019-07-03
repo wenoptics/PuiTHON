@@ -49,10 +49,7 @@ class HotDOM(DOM):
         return f"$('{self.selector}')"
 
     def set_attr(self, name, value):
-        self.call_engine_function('setProp', self.selector, name, value)
-
-    def get_attr(self, name):
-        raise NotImplementedError()  # fixme
+        self.call_engine_function('setAttr', self.selector, name, value)
 
     def set_class(self, class_or_list):
         self.call_engine_function('setClass', self.selector, class_or_list)
@@ -68,12 +65,6 @@ class HotDOM(DOM):
 
     def set_innertext(self, s):
         self.call_engine_function('setText', self.selector, str(s))
-
-    def get_innerhtml(self, s):
-        raise NotImplementedError()  # fixme
-
-    def get_innertext(self, s):
-        return self.execute_js(".text();", True)
 
     def execute_js(self, code, prepend_jquery=False):
         """
@@ -112,4 +103,16 @@ class HotDOM(DOM):
 
     def get_value(self):
         self.call_engine_with_poll('getValue', self.selector)
+        return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(self._get_js_returned_key())
+
+    def get_innerhtml(self):
+        self.call_engine_with_poll('getHtml', self.selector)
+        return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(self._get_js_returned_key())
+
+    def get_innertext(self):
+        self.call_engine_with_poll('getText', self.selector)
+        return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(self._get_js_returned_key())
+
+    def get_attr(self, name):
+        self.call_engine_with_poll('getAttr', self.selector, name)
         return RuntimeManager.get_instance().JavascriptReturned.wait_for_value(self._get_js_returned_key())

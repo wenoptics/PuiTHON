@@ -55,6 +55,7 @@ todo
  ## Todo
  
  - [x] Set Window size
+ - [x] Unittests
  
  ## Roadmap
  

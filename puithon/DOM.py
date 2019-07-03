@@ -40,10 +40,10 @@ class DOM:
     def set_innertext(self, s):
         raise NotImplementedError()
 
-    def get_innerhtml(self, s):
+    def get_innerhtml(self):
         raise NotImplementedError()
 
-    def get_innertext(self, s):
+    def get_innertext(self):
         raise NotImplementedError()
 
     def execute_js(self, code):
