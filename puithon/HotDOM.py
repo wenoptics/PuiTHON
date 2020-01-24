@@ -65,6 +65,9 @@ class HotDOM(DOM):
 
     def set_innertext(self, s):
         self.call_engine_function('setText', self.selector, str(s))
+        
+    def set_value(self, s):
+        self.call_engine_function('setValue', self.selector, str(s))
 
     def execute_js(self, code, prepend_jquery=False):
         """

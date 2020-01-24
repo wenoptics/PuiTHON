@@ -71,4 +71,5 @@ class DOM:
     def get_value(self):
         raise NotImplementedError()
 
-
+    def set_value(self, s):
+        raise NotImplementedError()

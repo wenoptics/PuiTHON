@@ -66,3 +66,10 @@ todo
     
  - Phrase 3: A WYSIWYG editor for desktop GUI development.
  
+ ## Changelog:
+ 
+ **v0.1.2**
+ 
+ - Add `context_menu` flag to allow enable/disable the browser right click menu.
+ - Fix `.setValue()`
+ 

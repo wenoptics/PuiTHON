@@ -189,28 +189,46 @@ class _WindowManaging:
                 ctypes.windll.user32.SetWindowPos(window_handle, insert_after_handle,
                                                   *window.window_init_rect, SWP_NOMOVE)
 
-    def __init__(self):
+    def __init__(self, settings=None, switches=None):
         # super().__init__(name='WindowManagingThread--UIThread')
+        if switches is None:
+            switches = {}
+        if settings is None:
+            settings = {}
         self.window_manager = self.WindowManager()
         self.ui_exec_queue = Queue()
         self._evt_stop = Event()
-        self._cef_init()
+        self._cef_init(settings=settings, switches=switches)
 
     @staticmethod
-    def _cef_init():
+    def _cef_init(settings=None, switches=None):
+        """
+            
+        :param settings: See https://github.com/cztomczak/cefpython/blob/cefpython53/api/ApplicationSettings.md
+        :param switches: 
+        :return: 
+        """
         # To shutdown all CEF processes on error
+        default_switches = {
+            'allow_file_access': b'1',
+            'allow_file_access_from_files': b'1'
+        }
+        default_settings = {
+            # "product_version": "MyProduct/10.00",
+            # "user_agent": "MyAgent/20.00 MyProduct/10.00",
+            'downloads_enabled': False,
+            'context_menu': {'enabled': False},
+            'remote_debugging_port': -1
+        }
+        if switches is None:
+            switches = {}
+        if settings is None:
+            settings = {}
+        default_switches.update(switches)
+        default_settings.update(settings)
+        
         sys.excepthook = cef.ExceptHook
-
-        cef.Initialize(
-            settings={
-                # "product_version": "MyProduct/10.00",
-                # "user_agent": "MyAgent/20.00 MyProduct/10.00",
-                # 'context_menu': {'enabled': False},
-                'downloads_enabled': False
-            }, switches={
-                'allow_file_access': b'1',
-                'allow_file_access_from_files': b'1'
-            })
+        cef.Initialize(settings=default_settings, switches=default_switches)
 
     def run(self):
         """
@@ -262,7 +280,11 @@ class RuntimeManager:
             RuntimeManager()
         return RuntimeManager.__instance
 
-    def __init__(self):
+    def __init__(self, debug=False):
+        """
+        
+        :param debug:  mouse context menu (e.g. navigation commands, print, devtools etc.) and the remote debug 
+        """
         if RuntimeManager.__instance is not None:
             raise RuntimeError('This is a singleton')
         RuntimeManager.__instance = self
@@ -271,7 +293,12 @@ class RuntimeManager:
 
         self.FunctionBinding = _BindFunctionThread()
         self.JavascriptReturned = _JavascriptReturnThread()
-        self.WindowManager = _WindowManaging()
+        self.WindowManager = _WindowManaging(settings={
+            # https://github.com/cztomczak/cefpython/blob/master/api/ApplicationSettings.md#context_menu
+            'context_menu': {'enabled': debug},
+            # https://github.com/cztomczak/cefpython/blob/master/api/ApplicationSettings.md#remote_debugging_port
+            'remote_debugging_port': 0 if debug else -1 
+        })
 
     def start(self):
         self.FunctionBinding.start()

@@ -101,6 +101,10 @@ var puithonJS = {
     setProp: function (dom, name, val) {
         $(dom).prop(name, val)
     },
+    
+    setValue: function (dom, val) {
+        $(dom).val(val)
+    },
 
     setAttr: function (dom, name, val) {
         $(dom).attr(name, val)
