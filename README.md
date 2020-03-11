@@ -66,7 +66,11 @@ todo
     
  - Phrase 3: A WYSIWYG editor for desktop GUI development.
  
- ## Changelog:
+ ## Changelog: 
+ 
+ **v0.1.3**
+ 
+ - Fix threads not exit on closing during starting-up
  
  **v0.1.2**
  

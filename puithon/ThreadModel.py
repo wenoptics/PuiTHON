@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class StoppableThread(Thread):
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         if name is None:
             name = self.__class__.__name__
-        super().__init__(name=name)
+        super().__init__(name=name, **kwargs)
         self._evt_stop = Event()
 
     def run(self) -> None:

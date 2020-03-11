@@ -41,8 +41,8 @@ def get_python_callback_js_name(obj):
 
 class _BindFunctionThread(StoppableThread):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, daemon=True, **kwargs):
+        super().__init__(daemon=daemon, **kwargs)
         self.q_function = Queue()
 
     def _routine(self):
@@ -65,8 +65,8 @@ class _JavascriptReturnThread(StoppableThread):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, daemon=True, **kwargs):
+        super().__init__(daemon=daemon, **kwargs)
         self.q_value = Queue()
 
         # a waiting queue map (key is 'what') for massage consuming
@@ -109,7 +109,8 @@ class _JavascriptReturnThread(StoppableThread):
         """
         from threading import Thread
         Thread(target=lambda: handler(self.wait_for_value(what)),
-               name=f'{self.__class__.__name__}->on_value')\
+               name=f'{self.__class__.__name__}->on_value',
+               daemon=True)\
             .start()
 
         # fixme This thread will be leaked and run forever if no value received
